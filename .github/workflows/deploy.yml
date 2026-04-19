@@ -1,4 +1,4 @@
-name: Deploy API
+name: Deploy
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
     paths:
       - 'src/**'
       - 'Dockerfile'
+      - 'k8s/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE: ghcr.io/souluanf/online-survey-api
+  IMAGE_API: ghcr.io/souluanf/online-survey-api
+  IMAGE_WEB: ghcr.io/souluanf/online-survey-web
 
 jobs:
   build-and-deploy:
@@ -30,12 +32,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile
           push: true
-          tags: ${{ env.IMAGE }}:latest,${{ env.IMAGE }}:${{ github.sha }}
+          tags: ${{ env.IMAGE_API }}:latest,${{ env.IMAGE_API }}:${{ github.sha }}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/OnlineSurvey.Web/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_WEB }}:latest,${{ env.IMAGE_WEB }}:${{ github.sha }}
 
       - name: Install Doppler CLI
         run: |
@@ -48,7 +59,9 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           export APP_HOST=$(doppler secrets get APP_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          export WEB_HOST=$(doppler secrets get WEB_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
           envsubst < k8s/ingress.yaml > k8s/ingress.yaml.tmp && mv k8s/ingress.yaml.tmp k8s/ingress.yaml
+          envsubst < k8s/web-ingress.yaml > k8s/web-ingress.yaml.tmp && mv k8s/web-ingress.yaml.tmp k8s/web-ingress.yaml
 
       - name: Copy manifests to server
         uses: appleboy/scp-action@v0.1.7
@@ -70,3 +83,4 @@ jobs:
             kubectl apply -f /tmp/survey/k8s/postgres.yaml
             kubectl apply -f /tmp/survey/k8s/
             kubectl rollout restart deployment/survey-api -n survey
+            kubectl rollout restart deployment/survey-web -n survey
