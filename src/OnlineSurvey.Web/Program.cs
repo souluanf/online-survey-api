@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using OnlineSurvey.Web;
 using OnlineSurvey.Web.Services;
 
@@ -17,5 +18,6 @@ if (string.IsNullOrEmpty(apiBaseAddress))
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseAddress) });
 builder.Services.AddScoped<ISurveyApiService, SurveyApiService>();
+builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

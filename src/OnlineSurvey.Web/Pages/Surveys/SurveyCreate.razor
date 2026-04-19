@@ -6,56 +6,72 @@
 
 <PageTitle>Criar Nova Pesquisa</PageTitle>
 
-<h1>Criar Nova Pesquisa</h1>
+<MudText Typo="Typo.h4" Class="font-weight-bold mb-6">Criar Nova Pesquisa</MudText>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
-    <div class="alert alert-danger">@_errorMessage</div>
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">@_errorMessage</MudAlert>
 }
 
 @if (_created)
 {
-    <div class="alert alert-success">
-        <h4>Pesquisa criada com sucesso!</h4>
-        <p>A pesquisa "<strong>@_title</strong>" foi criada como rascunho.</p>
-        <div class="mt-3">
-            <button class="btn btn-primary me-2" @onclick="ActivateAndGo">Ativar Pesquisa</button>
-            <a href="/surveys" class="btn btn-outline-secondary">Voltar para Lista</a>
-        </div>
-    </div>
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
+        <MudText Typo="Typo.h6" Class="mb-2">Pesquisa criada com sucesso!</MudText>
+        <MudText Class="mb-4">A pesquisa "<strong>@_title</strong>" foi criada como rascunho.</MudText>
+        <MudStack Row="true" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="ActivateAndGo">
+                Ativar Pesquisa
+            </MudButton>
+            <MudButton Href="/surveys" Variant="Variant.Outlined" Color="Color.Inherit">
+                Voltar para Lista
+            </MudButton>
+        </MudStack>
+    </MudAlert>
 }
 else
 {
     <EditForm Model="this" OnValidSubmit="HandleSubmit">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Informações da Pesquisa</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Título *</label>
-                    <input type="text" class="form-control" @bind="_title" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" @bind="_description" rows="3"></textarea>
-                </div>
-            </div>
-        </div>
+        <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Informações da Pesquisa</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField Label="Título *"
+                              @bind-Value="_title"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Class="mb-4" />
+                <MudTextField Label="Descrição"
+                              @bind-Value="_description"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              AutoGrow="true" />
+            </MudCardContent>
+        </MudCard>
 
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Perguntas</h5>
-                <button type="button" class="btn btn-sm btn-success" @onclick="AddQuestion">
-                    + Adicionar Pergunta
-                </button>
-            </div>
-            <div class="card-body">
+        <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Perguntas</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Success"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddQuestion">
+                        Adicionar Pergunta
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
                 @if (!_questions.Any())
                 {
-                    <div class="alert alert-info">
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
                         Adicione pelo menos uma pergunta à pesquisa.
-                    </div>
+                    </MudAlert>
                 }
                 else
                 {
@@ -64,71 +80,93 @@ else
                         var questionIndex = q;
                         var question = _questions[questionIndex];
 
-                        <div class="card mb-3 border-primary">
-                            <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
-                                <span><strong>Pergunta @(questionIndex + 1)</strong></span>
-                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveQuestion(questionIndex)">
-                                    Remover
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Texto da Pergunta *</label>
-                                    <input type="text" class="form-control" @bind="question.Text" required />
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" @bind="question.IsRequired" id="required_@questionIndex" />
-                                    <label class="form-check-label" for="required_@questionIndex">Pergunta obrigatória</label>
-                                </div>
+                        <MudCard Outlined="true" Style="border-radius:8px; border-left: 4px solid var(--mud-palette-primary)" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Pergunta @(questionIndex + 1)</MudText>
+                                </CardHeaderContent>
+                                <CardHeaderActions>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="() => RemoveQuestion(questionIndex)" />
+                                </CardHeaderActions>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudTextField Label="Texto da Pergunta *"
+                                              @bind-Value="question.Text"
+                                              Variant="Variant.Outlined"
+                                              Required="true"
+                                              Class="mb-3" />
+                                <MudCheckBox @bind-Value="question.IsRequired"
+                                             Label="Pergunta obrigatória"
+                                             Color="Color.Primary"
+                                             Class="mb-4" />
 
-                                <div class="mt-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <label class="form-label mb-0"><strong>Opções de Resposta</strong></label>
-                                        <button type="button" class="btn btn-sm btn-outline-success" @onclick="() => AddOption(questionIndex)">
-                                            + Adicionar Opção
-                                        </button>
-                                    </div>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Opções de Resposta</MudText>
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Add"
+                                               OnClick="() => AddOption(questionIndex)">
+                                        Adicionar Opção
+                                    </MudButton>
+                                </MudStack>
 
-                                    @if (!question.Options.Any())
+                                @if (!question.Options.Any())
+                                {
+                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                        Adicione pelo menos 2 opções de resposta.
+                                    </MudAlert>
+                                }
+                                else
+                                {
+                                    @for (int o = 0; o < question.Options.Count; o++)
                                     {
-                                        <div class="alert alert-warning py-2">
-                                            Adicione pelo menos 2 opções de resposta.
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        @for (int o = 0; o < question.Options.Count; o++)
-                                        {
-                                            var optionIndex = o;
-                                            var option = question.Options[optionIndex];
+                                        var optionIndex = o;
+                                        var option = question.Options[optionIndex];
+                                        var letter = (char)('A' + optionIndex);
 
-                                            <div class="input-group mb-2">
-                                                <span class="input-group-text">@((char)('A' + optionIndex))</span>
-                                                <input type="text" class="form-control" @bind="option.Text" placeholder="Texto da opção" required />
-                                                <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveOption(questionIndex, optionIndex)" disabled="@(question.Options.Count <= 2)">
-                                                    X
-                                                </button>
-                                            </div>
-                                        }
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" Style="min-width:32px; font-weight:700">@letter</MudChip>
+                                            <MudTextField @bind-Value="option.Text"
+                                                          Placeholder="Texto da opção"
+                                                          Variant="Variant.Outlined"
+                                                          Required="true"
+                                                          Margin="Margin.Dense"
+                                                          Style="flex:1" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                           Color="Color.Error"
+                                                           Size="Size.Small"
+                                                           Disabled="@(question.Options.Count <= 2)"
+                                                           OnClick="() => RemoveOption(questionIndex, optionIndex)" />
+                                        </MudStack>
                                     }
-                                </div>
-                            </div>
-                        </div>
+                                }
+                            </MudCardContent>
+                        </MudCard>
                     }
                 }
-            </div>
-        </div>
+            </MudCardContent>
+        </MudCard>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary" disabled="@(_saving || !IsValid())">
+        <MudStack Row="true" Spacing="2">
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@(_saving || !IsValid())"
+                       StartIcon="@(_saving ? null : Icons.Material.Filled.Save)">
                 @if (_saving)
                 {
-                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                 }
                 Criar Pesquisa
-            </button>
-            <a href="/surveys" class="btn btn-outline-secondary">Cancelar</a>
-        </div>
+            </MudButton>
+            <MudButton Href="/surveys" Variant="Variant.Outlined" Color="Color.Default">
+                Cancelar
+            </MudButton>
+        </MudStack>
     </EditForm>
 }
 

@@ -5,170 +5,203 @@
 
 <PageTitle>Pesquisas</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">Pesquisas</h1>
-    <a href="/surveys/create" class="btn btn-success">
-        + Criar Nova Pesquisa
-    </a>
-</div>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-6">
+    <MudText Typo="Typo.h4" Class="font-weight-bold">Pesquisas</MudText>
+    <MudButton Href="/surveys/create"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               Style="border-radius:8px">
+        Nova Pesquisa
+    </MudButton>
+</MudStack>
 
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <button class="nav-link @(_activeTab == "active" ? "active" : "")" @onclick='() => ChangeTab("active")'>
-            Ativas (@_activeSurveys.Count())
-        </button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link @(_activeTab == "draft" ? "active" : "")" @onclick='() => ChangeTab("draft")'>
-            Rascunhos (@_draftSurveys.Count())
-        </button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link @(_activeTab == "closed" ? "active" : "")" @onclick='() => ChangeTab("closed")'>
-            Encerradas (@_closedSurveys.Count())
-        </button>
-    </li>
-</ul>
-
-@if (_loading)
-{
-    <p><em>Carregando...</em></p>
-}
-else
-{
-    @if (_activeTab == "active")
-    {
-        @if (!_activeSurveys.Any())
+<MudTabs Elevation="0" Rounded="false" ApplyEffectsToContainer="true" PanelClass="pt-6" @bind-ActivePanelIndex="_tabIndex">
+    <MudTabPanel Text="@($"Ativas ({_activeSurveys.Count()})")">
+        @if (_loading)
         {
-            <div class="alert alert-info">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto" />
+        }
+        else if (!_activeSurveys.Any())
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
                 Nenhuma pesquisa ativa no momento.
-            </div>
+            </MudAlert>
         }
         else
         {
-            <div class="row">
+            <MudGrid>
                 @foreach (var survey in _activeSurveys)
                 {
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 border-success">
-                            <div class="card-header bg-success text-white">
-                                <span class="badge bg-light text-success">Ativa</span>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="card-title">@survey.Title</h5>
+                    <MudItem xs="12" sm="6" lg="4">
+                        <MudCard Elevation="2" Style="border-radius:12px; height:100%; border-top: 4px solid var(--mud-palette-success)">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Ativa</MudChip>
+                                    </MudStack>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" Class="mb-2">@survey.Title</MudText>
                                 @if (!string.IsNullOrEmpty(survey.Description))
                                 {
-                                    <p class="card-text">@survey.Description</p>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@survey.Description</MudText>
                                 }
-                                <p class="text-muted small">
-                                    @survey.QuestionCount perguntas |
-                                    @survey.ResponseCount respostas
-                                </p>
-                            </div>
-                            <div class="card-footer d-flex gap-1 flex-wrap">
-                                <a href="/surveys/@survey.Id" class="btn btn-primary btn-sm">Responder</a>
-                                <a href="/surveys/@survey.Id/results" class="btn btn-outline-secondary btn-sm">Resultados</a>
-                                <button class="btn btn-outline-warning btn-sm" @onclick="() => CloseSurvey(survey.Id)">Encerrar</button>
-                            </div>
-                        </div>
-                    </div>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @survey.QuestionCount perguntas &nbsp;|&nbsp; @survey.ResponseCount respostas
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="flex-wrap gap-1 pa-3">
+                                <MudButton Href="@($"/surveys/{survey.Id}")"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small">
+                                    Responder
+                                </MudButton>
+                                <MudButton Href="@($"/surveys/{survey.Id}/results")"
+                                           Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           Size="Size.Small">
+                                    Resultados
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           @onclick="() => CloseSurvey(survey.Id)">
+                                    Encerrar
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
                 }
-            </div>
+            </MudGrid>
         }
-    }
-    else if (_activeTab == "draft")
-    {
-        @if (!_draftSurveys.Any())
+    </MudTabPanel>
+
+    <MudTabPanel Text="@($"Rascunhos ({_draftSurveys.Count()})")">
+        @if (_loading)
         {
-            <div class="alert alert-info">
-                Nenhum rascunho. <a href="/surveys/create">Crie uma nova pesquisa</a>.
-            </div>
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto" />
+        }
+        else if (!_draftSurveys.Any())
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                Nenhum rascunho. <MudLink Href="/surveys/create">Crie uma nova pesquisa</MudLink>.
+            </MudAlert>
         }
         else
         {
-            <div class="row">
+            <MudGrid>
                 @foreach (var survey in _draftSurveys)
                 {
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 border-warning">
-                            <div class="card-header bg-warning">
-                                <span class="badge bg-dark">Rascunho</span>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="card-title">@survey.Title</h5>
+                    <MudItem xs="12" sm="6" lg="4">
+                        <MudCard Elevation="2" Style="border-radius:12px; height:100%; border-top: 4px solid var(--mud-palette-warning)">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Rascunho</MudChip>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" Class="mb-2">@survey.Title</MudText>
                                 @if (!string.IsNullOrEmpty(survey.Description))
                                 {
-                                    <p class="card-text">@survey.Description</p>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@survey.Description</MudText>
                                 }
-                                <p class="text-muted small">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
                                     @survey.QuestionCount perguntas
-                                </p>
-                            </div>
-                            <div class="card-footer d-flex gap-1 flex-wrap">
-                                <a href="/surveys/@survey.Id/edit" class="btn btn-primary btn-sm">Editar</a>
-                                <button class="btn btn-success btn-sm" @onclick="() => ActivateSurvey(survey.Id)" disabled="@_activating">
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="flex-wrap gap-1 pa-3">
+                                <MudButton Href="@($"/surveys/{survey.Id}/edit")"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small">
+                                    Editar
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           Size="Size.Small"
+                                           Disabled="@(_activating)"
+                                           @onclick="() => ActivateSurvey(survey.Id)">
                                     @if (_activatingId == survey.Id)
                                     {
-                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
                                     }
                                     Ativar
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteSurvey(survey.Id)">
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           @onclick="() => DeleteSurvey(survey.Id)">
                                     Excluir
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
                 }
-            </div>
+            </MudGrid>
         }
-    }
-    else if (_activeTab == "closed")
-    {
-        @if (!_closedSurveys.Any())
+    </MudTabPanel>
+
+    <MudTabPanel Text="@($"Encerradas ({_closedSurveys.Count()})")">
+        @if (_loading)
         {
-            <div class="alert alert-info">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto" />
+        }
+        else if (!_closedSurveys.Any())
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
                 Nenhuma pesquisa encerrada.
-            </div>
+            </MudAlert>
         }
         else
         {
-            <div class="row">
+            <MudGrid>
                 @foreach (var survey in _closedSurveys)
                 {
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 border-secondary">
-                            <div class="card-header bg-secondary text-white">
-                                <span class="badge bg-light text-secondary">Encerrada</span>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="card-title">@survey.Title</h5>
+                    <MudItem xs="12" sm="6" lg="4">
+                        <MudCard Elevation="2" Style="border-radius:12px; height:100%; border-top: 4px solid #94a3b8">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled">Encerrada</MudChip>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" Class="mb-2">@survey.Title</MudText>
                                 @if (!string.IsNullOrEmpty(survey.Description))
                                 {
-                                    <p class="card-text">@survey.Description</p>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@survey.Description</MudText>
                                 }
-                                <p class="text-muted small">
-                                    @survey.QuestionCount perguntas |
-                                    @survey.ResponseCount respostas
-                                </p>
-                            </div>
-                            <div class="card-footer">
-                                <a href="/surveys/@survey.Id/results" class="btn btn-outline-secondary btn-sm">Ver Resultados</a>
-                            </div>
-                        </div>
-                    </div>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @survey.QuestionCount perguntas &nbsp;|&nbsp; @survey.ResponseCount respostas
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="pa-3">
+                                <MudButton Href="@($"/surveys/{survey.Id}/results")"
+                                           Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           Size="Size.Small">
+                                    Ver Resultados
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
                 }
-            </div>
+            </MudGrid>
         }
-    }
-}
+    </MudTabPanel>
+</MudTabs>
 
 @if (!string.IsNullOrEmpty(_message))
 {
-    <div class="alert @(_messageType) alert-dismissible fade show mt-3" role="alert">
+    <MudAlert Severity="@(_messageType == "alert-success" ? Severity.Success : _messageType == "alert-danger" ? Severity.Error : Severity.Info)"
+              Variant="Variant.Filled"
+              ShowCloseIcon="true"
+              CloseIconClicked="() => _message = null"
+              Class="mt-4">
         @_message
-        <button type="button" class="btn-close" @onclick="() => _message = null"></button>
-    </div>
+    </MudAlert>
 }
 
 @code {
@@ -177,6 +210,7 @@ else
     private IEnumerable<SurveyResponse> _closedSurveys = [];
     private bool _loading = true;
     private string _activeTab = "active";
+    private int _tabIndex = 0;
     private bool _activating;
     private Guid? _activatingId;
     private string? _message;
@@ -221,6 +255,7 @@ else
             _messageType = "alert-success";
             await LoadSurveys();
             _activeTab = "active";
+            _tabIndex = 0;
         }
         else
         {
@@ -259,6 +294,7 @@ else
             _messageType = "alert-success";
             await LoadSurveys();
             _activeTab = "closed";
+            _tabIndex = 2;
         }
         else
         {

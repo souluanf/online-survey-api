@@ -8,112 +8,139 @@
 
 @if (_loading)
 {
-    <p><em>Carregando...</em></p>
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto mt-8" />
 }
 else if (_survey == null)
 {
-    <div class="alert alert-danger">
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
         Pesquisa não encontrada.
-    </div>
-    <a href="/surveys" class="btn btn-secondary">Voltar</a>
+    </MudAlert>
+    <MudButton Href="/surveys" Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack">
+        Voltar
+    </MudButton>
 }
 else if (_survey.Status != SurveyStatus.Draft)
 {
-    <div class="alert alert-warning">
-        <h4>Pesquisa não pode ser editada</h4>
-        <p>Apenas pesquisas em rascunho podem ser editadas. Esta pesquisa está com status: <strong>@GetStatusName(_survey.Status)</strong></p>
-    </div>
-    <a href="/surveys" class="btn btn-secondary">Voltar para Lista</a>
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-4">
+        <MudText Typo="Typo.h6" Class="mb-1">Pesquisa não pode ser editada</MudText>
+        <MudText>Apenas pesquisas em rascunho podem ser editadas. Esta pesquisa está com status: <strong>@GetStatusName(_survey.Status)</strong></MudText>
+    </MudAlert>
+    <MudButton Href="/surveys" Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack">
+        Voltar para Lista
+    </MudButton>
 }
 else
 {
-    <h1>Editar Pesquisa</h1>
+    <MudText Typo="Typo.h4" Class="font-weight-bold mb-6">Editar Pesquisa</MudText>
 
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <div class="alert alert-danger">@_errorMessage</div>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">@_errorMessage</MudAlert>
     }
 
     @if (_saved)
     {
-        <div class="alert alert-success">
+        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
             Pesquisa atualizada com sucesso!
-        </div>
+        </MudAlert>
     }
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Informações da Pesquisa</h5>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Título *</label>
-                <input type="text" class="form-control" @bind="_title" required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Descrição</label>
-                <textarea class="form-control" @bind="_description" rows="3"></textarea>
-            </div>
-        </div>
-    </div>
+    <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Informações da Pesquisa</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField Label="Título *"
+                          @bind-Value="_title"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          Class="mb-4" />
+            <MudTextField Label="Descrição"
+                          @bind-Value="_description"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          AutoGrow="true" />
+        </MudCardContent>
+    </MudCard>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Perguntas</h5>
-        </div>
-        <div class="card-body">
+    <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Perguntas</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
             @if (!_survey.Questions.Any())
             {
-                <div class="alert alert-warning">
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
                     Esta pesquisa não tem perguntas.
-                </div>
+                </MudAlert>
             }
             else
             {
                 @foreach (var question in _survey.Questions.OrderBy(q => q.Order))
                 {
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <strong>Pergunta @question.Order</strong>
-                            @if (question.IsRequired)
-                            {
-                                <span class="badge bg-danger ms-2">Obrigatória</span>
-                            }
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2"><strong>@question.Text</strong></p>
-                            <ul class="list-unstyled mb-0">
+                    <MudCard Outlined="true" Style="border-radius:8px" Class="mb-3">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Pergunta @question.Order</MudText>
+                                    @if (question.IsRequired)
+                                    {
+                                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Obrigatória</MudChip>
+                                    }
+                                </MudStack>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1" Class="font-weight-bold mb-3">@question.Text</MudText>
+                            <MudStack Spacing="1">
                                 @foreach (var option in question.Options.OrderBy(o => o.Order))
                                 {
-                                    <li class="mb-1">
-                                        <span class="badge bg-secondary me-2">@((char)('A' + option.Order - 1))</span>
-                                        @option.Text
-                                    </li>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Style="min-width:32px; font-weight:700">@((char)('A' + option.Order - 1))</MudChip>
+                                        <MudText Typo="Typo.body2">@option.Text</MudText>
+                                    </MudStack>
                                 }
-                            </ul>
-                        </div>
-                    </div>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
                 }
             }
-            <div class="alert alert-info mt-3">
-                <small>Para editar perguntas e opções, exclua a pesquisa e crie uma nova.</small>
-            </div>
-        </div>
-    </div>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                <MudText Typo="Typo.caption">Para editar perguntas e opções, exclua a pesquisa e crie uma nova.</MudText>
+            </MudAlert>
+        </MudCardContent>
+    </MudCard>
 
-    <div class="d-flex gap-2 mb-4">
-        <button class="btn btn-primary" @onclick="SaveChanges" disabled="@(_saving || string.IsNullOrWhiteSpace(_title))">
+    <MudStack Row="true" Spacing="2" Class="mb-6">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Disabled="@(_saving || string.IsNullOrWhiteSpace(_title))"
+                   OnClick="SaveChanges">
             @if (_saving)
             {
-                <span class="spinner-border spinner-border-sm me-2"></span>
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
             }
             Salvar Alterações
-        </button>
-        <button class="btn btn-success" @onclick="ActivateSurvey" disabled="@_saving">
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                   Disabled="@_saving"
+                   OnClick="ActivateSurvey">
             Ativar Pesquisa
-        </button>
-        <a href="/surveys" class="btn btn-outline-secondary">Voltar</a>
-    </div>
+        </MudButton>
+        <MudButton Href="/surveys"
+                   Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.ArrowBack">
+            Voltar
+        </MudButton>
+    </MudStack>
 }
 
 @code {

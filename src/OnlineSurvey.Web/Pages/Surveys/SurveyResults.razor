@@ -8,47 +8,60 @@
 
 @if (_loading)
 {
-    <p><em>Carregando resultados...</em></p>
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto mt-8" />
 }
 else if (_results is null)
 {
-    <div class="alert alert-danger">Resultados não encontrados.</div>
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Resultados não encontrados.</MudAlert>
 }
 else
 {
-    <h1>Resultados: @_results.SurveyTitle</h1>
-    <p class="lead">Total de respostas: <strong>@_results.TotalResponses</strong></p>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+        <MudText Typo="Typo.h4" Class="font-weight-bold">Resultados: @_results.SurveyTitle</MudText>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-6">
+        <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Secondary" />
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+            Total de respostas: <strong>@_results.TotalResponses</strong>
+        </MudText>
+    </MudStack>
 
     @foreach (var question in _results.Questions)
     {
-        <div class="card mb-4">
-            <div class="card-header">
-                <strong>@question.QuestionText</strong>
-            </div>
-            <div class="card-body">
+        <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">@question.QuestionText</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
                 @foreach (var option in question.Options)
                 {
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between">
-                            <span>@option.OptionText</span>
-                            <span>@option.Count votos (@option.Percentage.ToString("F2")%)</span>
-                        </div>
-                        <div class="progress" style="height: 25px;">
-                            <div class="progress-bar @GetProgressBarColor(option.Percentage)"
-                                 role="progressbar"
-                                 style="width: @(option.Percentage.ToString(CultureInfo.InvariantCulture))%"
-                                 aria-valuenow="@(option.Percentage.ToString(CultureInfo.InvariantCulture))"
-                                 aria-valuemin="0"
-                                 aria-valuemax="100">
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-1">
+                            <MudText Typo="Typo.body2" Class="font-weight-medium">@option.OptionText</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                @option.Count votos &nbsp;—&nbsp; @option.Percentage.ToString("F1")%
+                            </MudText>
+                        </MudStack>
+                        <MudProgressLinear Value="@option.Percentage"
+                                           Max="100"
+                                           Color="@GetProgressColor(option.Percentage)"
+                                           Rounded="true"
+                                           Size="Size.Large"
+                                           Style="height:14px" />
                     </div>
                 }
-            </div>
-        </div>
+            </MudCardContent>
+        </MudCard>
     }
 
-    <a href="/surveys" class="btn btn-outline-primary">Voltar às Pesquisas</a>
+    <MudButton Href="/surveys"
+               Variant="Variant.Outlined"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        Voltar às Pesquisas
+    </MudButton>
 }
 
 @code {
@@ -64,11 +77,11 @@ else
         _loading = false;
     }
 
-    private static string GetProgressBarColor(double percentage) => percentage switch
+    private static Color GetProgressColor(double percentage) => percentage switch
     {
-        > 50 => "bg-success",
-        > 25 => "bg-info",
-        > 10 => "bg-warning",
-        _ => "bg-secondary"
+        > 50 => Color.Success,
+        > 25 => Color.Info,
+        > 10 => Color.Warning,
+        _ => Color.Default
     };
 }

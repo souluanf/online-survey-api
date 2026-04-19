@@ -8,75 +8,99 @@
 
 @if (_loading)
 {
-    <p><em>Carregando pesquisa...</em></p>
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-block mx-auto mt-8" />
 }
 else if (_survey is null)
 {
-    <div class="alert alert-danger">Pesquisa não encontrada.</div>
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Pesquisa não encontrada.</MudAlert>
 }
 else if (_submitted)
 {
-    <div class="alert alert-success">
-        <h4>Obrigado por participar!</h4>
-        <p>Sua resposta foi registrada com sucesso.</p>
-        <a href="/surveys/@SurveyId/results" class="btn btn-primary">Ver Resultados</a>
-        <a href="/surveys" class="btn btn-outline-secondary">Voltar às Pesquisas</a>
-    </div>
+    <MudContainer MaxWidth="MaxWidth.Small" Class="text-center py-12">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                 Style="font-size:5rem; color: var(--mud-palette-success);"
+                 Class="mb-4" />
+        <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">Obrigado por participar!</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
+            Sua resposta foi registrada com sucesso.
+        </MudText>
+        <MudStack Row="true" Justify="Justify.Center" Spacing="3">
+            <MudButton Href="@($"/surveys/{SurveyId}/results")"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.BarChart">
+                Ver Resultados
+            </MudButton>
+            <MudButton Href="/surveys"
+                       Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.List">
+                Voltar às Pesquisas
+            </MudButton>
+        </MudStack>
+    </MudContainer>
 }
 else
 {
-    <h1>@_survey.Title</h1>
+    <MudText Typo="Typo.h4" Class="font-weight-bold mb-2">@_survey.Title</MudText>
     @if (!string.IsNullOrEmpty(_survey.Description))
     {
-        <p class="lead">@_survey.Description</p>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-6">@_survey.Description</MudText>
     }
 
     <EditForm Model="_answers" OnValidSubmit="HandleSubmit">
         @foreach (var question in _survey.Questions.OrderBy(q => q.Order))
         {
-            <div class="card mb-3">
-                <div class="card-header">
-                    <strong>@(question.Order). @question.Text</strong>
-                    @if (question.IsRequired)
-                    {
-                        <span class="text-danger">*</span>
-                    }
-                </div>
-                <div class="card-body">
-                    @foreach (var option in question.Options.OrderBy(o => o.Order))
-                    {
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="radio"
-                                   name="@question.Id"
-                                   id="@option.Id"
-                                   value="@option.Id"
-                                   @onchange="() => SelectOption(question.Id, option.Id)" />
-                            <label class="form-check-label" for="@option.Id">
+            <MudCard Elevation="2" Style="border-radius:12px" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                @(question.Order). @question.Text
+                            </MudText>
+                            @if (question.IsRequired)
+                            {
+                                <MudText Color="Color.Error" Typo="Typo.subtitle1">*</MudText>
+                            }
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudRadioGroup T="Guid" Value="@(_answers.TryGetValue(question.Id, out var sel) ? sel : Guid.Empty)"
+                                   ValueChanged="(val) => SelectOption(question.Id, val)">
+                        @foreach (var option in question.Options.OrderBy(o => o.Order))
+                        {
+                            <MudRadio T="Guid" Value="@option.Id" Color="Color.Primary" Class="mb-1">
                                 @option.Text
-                            </label>
-                        </div>
-                    }
-                </div>
-            </div>
+                            </MudRadio>
+                        }
+                    </MudRadioGroup>
+                </MudCardContent>
+            </MudCard>
         }
 
         @if (!string.IsNullOrEmpty(_error))
         {
-            <div class="alert alert-danger">@_error</div>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">@_error</MudAlert>
         }
 
-        <button type="submit" class="btn btn-primary btn-lg" disabled="@_submitting">
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Disabled="@_submitting"
+                   StartIcon="@(_submitting ? null : Icons.Material.Filled.Send)"
+                   Style="border-radius:8px; padding: 12px 32px;">
             @if (_submitting)
             {
-                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                 <span>Enviando...</span>
             }
             else
             {
                 <span>Enviar Respostas</span>
             }
-        </button>
+        </MudButton>
     </EditForm>
 }
 
