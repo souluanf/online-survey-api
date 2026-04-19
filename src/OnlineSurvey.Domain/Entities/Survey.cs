@@ -8,6 +8,7 @@ public class Survey : Entity
     public string Title { get; private set; } = null!;
     public string? Description { get; private set; }
     public SurveyStatus Status { get; private set; }
+    public string OwnerId { get; private set; } = null!;
     public DateTime? StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
 
@@ -19,10 +20,11 @@ public class Survey : Entity
 
     private Survey() { }
 
-    public Survey(string title, string? description = null)
+    public Survey(string title, string? description = null, string ownerId = "")
     {
         SetTitle(title);
         Description = description;
+        OwnerId = ownerId;
         Status = SurveyStatus.Draft;
     }
 

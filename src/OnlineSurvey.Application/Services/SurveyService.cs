@@ -17,9 +17,9 @@ public class SurveyService : ISurveyService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<SurveyDetailResponse> CreateSurveyAsync(CreateSurveyRequest request, CancellationToken cancellationToken = default)
+    public async Task<SurveyDetailResponse> CreateSurveyAsync(CreateSurveyRequest request, string ownerId = "", CancellationToken cancellationToken = default)
     {
-        var survey = new Survey(request.Title, request.Description);
+        var survey = new Survey(request.Title, request.Description, ownerId);
 
         foreach (var questionDto in request.Questions.OrderBy(q => q.Order))
         {
@@ -52,10 +52,13 @@ public class SurveyService : ISurveyService
     public async Task<PaginatedResponse<SurveyResponse>> GetSurveysAsync(
         int page,
         int pageSize,
+        string ownerId = "",
         SurveyStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var (surveys, totalCount) = await _unitOfWork.Surveys.GetPaginatedAsync(page, pageSize, status, cancellationToken);
+        var (surveys, totalCount) = string.IsNullOrEmpty(ownerId)
+            ? await _unitOfWork.Surveys.GetPaginatedAsync(page, pageSize, status, cancellationToken)
+            : await _unitOfWork.Surveys.GetPaginatedByOwnerAsync(ownerId, page, pageSize, status, cancellationToken);
 
         var items = new List<SurveyResponse>();
         foreach (var survey in surveys)

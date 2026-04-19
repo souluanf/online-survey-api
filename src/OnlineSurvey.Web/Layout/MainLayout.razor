@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject FirebaseAuthService AuthService
+@inject NavigationManager Nav
 
 <MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
@@ -18,13 +20,33 @@
                    Class="mr-1">
             Pesquisas
         </MudButton>
-        <MudButton Href="/surveys/create"
-                   Color="Color.Inherit"
-                   StartIcon="@Icons.Material.Filled.AddCircleOutline"
-                   Variant="Variant.Outlined"
-                   Class="mr-2">
-            Nova Pesquisa
-        </MudButton>
+        @if (AuthService.IsAuthenticated)
+        {
+            <MudButton Href="/surveys/create"
+                       Color="Color.Inherit"
+                       StartIcon="@Icons.Material.Filled.AddCircleOutline"
+                       Variant="Variant.Outlined"
+                       Class="mr-2">
+                Nova Pesquisa
+            </MudButton>
+            <MudText Color="Color.Inherit" Class="mr-2">
+                @(AuthService.CurrentUser?.DisplayName ?? AuthService.CurrentUser?.Email)
+            </MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                           Color="Color.Inherit"
+                           OnClick="SignOut"
+                           Title="Sair" />
+        }
+        else
+        {
+            <MudButton Href="/login"
+                       Color="Color.Inherit"
+                       StartIcon="@Icons.Material.Filled.Login"
+                       Variant="Variant.Outlined"
+                       Class="mr-2">
+                Entrar
+            </MudButton>
+        }
     </MudAppBar>
 
     <MudMainContent>
@@ -68,4 +90,16 @@
             DefaultBorderRadius = "8px",
         }
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthStateChanged += StateHasChanged;
+        await AuthService.InitializeAsync();
+    }
+
+    private async Task SignOut()
+    {
+        await AuthService.SignOutAsync();
+        Nav.NavigateTo("/");
+    }
 }

@@ -14,4 +14,10 @@ public interface ISurveyRepository : IRepository<Survey>
         int pageSize,
         SurveyStatus? status = null,
         CancellationToken cancellationToken = default);
+    Task<(IEnumerable<Survey> Surveys, int TotalCount)> GetPaginatedByOwnerAsync(
+        string ownerId,
+        int page,
+        int pageSize,
+        SurveyStatus? status,
+        CancellationToken cancellationToken);
 }

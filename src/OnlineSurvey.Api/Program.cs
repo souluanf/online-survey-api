@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnlineSurvey.Api.Endpoints;
 using OnlineSurvey.Api.Middlewares;
@@ -21,6 +23,21 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://securetoken.google.com/online-survey-8d0af";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "https://securetoken.google.com/online-survey-8d0af",
+            ValidateAudience = true,
+            ValidAudience = "online-survey-8d0af",
+            ValidateLifetime = true
+        };
+    });
+builder.Services.AddAuthorization();
 
 #pragma warning disable S5332 // HTTP is acceptable for localhost and internal Docker network
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
@@ -68,6 +85,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("AllowFrontend");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapSurveyEndpoints();
 app.MapResponseEndpoints();

@@ -67,4 +67,28 @@ public class SurveyRepository : Repository<Survey>, ISurveyRepository
 
         return (surveys, totalCount);
     }
+
+    public async Task<(IEnumerable<Survey> Surveys, int TotalCount)> GetPaginatedByOwnerAsync(
+        string ownerId,
+        int page,
+        int pageSize,
+        SurveyStatus? status,
+        CancellationToken cancellationToken)
+    {
+        var query = DbSet.Where(s => s.OwnerId == ownerId);
+
+        if (status.HasValue)
+            query = query.Where(s => s.Status == status.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var surveys = await query
+            .Include(s => s.Questions)
+            .OrderByDescending(s => s.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (surveys, totalCount);
+    }
 }

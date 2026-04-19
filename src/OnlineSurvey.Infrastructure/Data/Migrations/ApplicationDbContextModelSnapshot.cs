@@ -181,6 +181,11 @@ namespace OnlineSurvey.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -198,6 +203,9 @@ namespace OnlineSurvey.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_Surveys_OwnerId");
 
                     b.HasIndex("Status");
 

@@ -18,6 +18,7 @@ if (string.IsNullOrEmpty(apiBaseAddress))
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseAddress) });
 builder.Services.AddScoped<ISurveyApiService, SurveyApiService>();
+builder.Services.AddScoped<FirebaseAuthService>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

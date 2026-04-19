@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using OnlineSurvey.Application.DTOs;
@@ -17,12 +18,14 @@ public static class SurveyEndpoints
             .WithName("CreateSurvey")
             .WithDescription("Creates a new survey with questions and options")
             .Produces<SurveyDetailResponse>(StatusCodes.Status201Created)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .RequireAuthorization();
 
         group.MapGet("/", GetSurveys)
             .WithName("GetSurveys")
-            .WithDescription("Gets paginated list of surveys")
-            .Produces<PaginatedResponse<SurveyResponse>>();
+            .WithDescription("Gets paginated list of surveys owned by the authenticated user")
+            .Produces<PaginatedResponse<SurveyResponse>>()
+            .RequireAuthorization();
 
         group.MapGet("/active", GetActiveSurveys)
             .WithName("GetActiveSurveys")
@@ -40,30 +43,35 @@ public static class SurveyEndpoints
             .WithDescription("Updates survey title and description (draft only)")
             .Produces<SurveyDetailResponse>()
             .Produces(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .RequireAuthorization();
 
         group.MapPost("/{id:guid}/activate", ActivateSurvey)
             .WithName("ActivateSurvey")
             .WithDescription("Activates a draft survey to start collecting responses")
             .Produces<SurveyDetailResponse>()
             .Produces(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .RequireAuthorization();
 
         group.MapPost("/{id:guid}/close", CloseSurvey)
             .WithName("CloseSurvey")
             .WithDescription("Closes an active survey")
             .Produces<SurveyDetailResponse>()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization();
 
         group.MapDelete("/{id:guid}", DeleteSurvey)
             .WithName("DeleteSurvey")
             .WithDescription("Deletes a survey (not active)")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .RequireAuthorization();
     }
 
     private static async Task<IResult> CreateSurvey(
         [FromBody] CreateSurveyRequest request,
+        HttpContext httpContext,
         ISurveyService surveyService,
         IValidator<CreateSurveyRequest> validator,
         CancellationToken cancellationToken)
@@ -72,7 +80,8 @@ public static class SurveyEndpoints
         if (!validationResult.IsValid)
             return Results.ValidationProblem(validationResult.ToDictionary());
 
-        var survey = await surveyService.CreateSurveyAsync(request, cancellationToken);
+        var ownerId = httpContext.User.FindFirst("user_id")?.Value ?? "";
+        var survey = await surveyService.CreateSurveyAsync(request, ownerId, cancellationToken);
         return Results.Created($"/api/surveys/{survey.Id}", survey);
     }
 
@@ -80,13 +89,15 @@ public static class SurveyEndpoints
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         [FromQuery] SurveyStatus? status,
+        HttpContext httpContext,
         ISurveyService surveyService,
         CancellationToken cancellationToken)
     {
         var effectivePage = page is null or <= 0 ? 1 : page.Value;
         var effectivePageSize = pageSize is null or <= 0 ? 10 : Math.Min(pageSize.Value, 100);
 
-        var result = await surveyService.GetSurveysAsync(effectivePage, effectivePageSize, status, cancellationToken);
+        var ownerId = httpContext.User.FindFirst("user_id")?.Value ?? "";
+        var result = await surveyService.GetSurveysAsync(effectivePage, effectivePageSize, ownerId, status, cancellationToken);
         return Results.Ok(result);
     }
 
