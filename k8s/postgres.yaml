@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: survey-postgres
+  namespace: survey
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: survey-postgres
+  template:
+    metadata:
+      labels:
+        app: survey-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: onlinesurvey
+            - name: POSTGRES_USER
+              value: survey
+            - name: POSTGRES_PASSWORD
+              value: Survey@2026!
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: survey-postgres-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: survey-postgres-pvc
+  namespace: survey
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: survey-postgres
+  namespace: survey
+spec:
+  selector:
+    app: survey-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

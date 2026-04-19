@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: survey-api
+  namespace: survey
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`${APP_HOST}`)
+      kind: Rule
+      services:
+        - name: survey-api
+          port: 80
+  tls:
+    certResolver: letsencrypt
