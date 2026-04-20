@@ -44,7 +44,9 @@ async function fetchWithAuth(path: string, token: string | null, options: Reques
     throw new Error(extractMessage(res.status, text))
   }
   if (res.status === 204) return null
-  return res.json()
+  const text = await res.text()
+  if (!text) return null
+  try { return JSON.parse(text) } catch { return null }
 }
 
 export const api = {
