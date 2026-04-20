@@ -189,7 +189,10 @@ function SurveyAnswerContent() {
 
       {preview && (
         <Alert className="border-amber-300 bg-amber-50 text-amber-900">
-          <AlertDescription>Modo pré-visualização — o envio de respostas está desabilitado.</AlertDescription>
+          <AlertDescription className="flex items-center justify-between gap-3">
+            <span>Modo pré-visualização — o envio de respostas está desabilitado.</span>
+            <LinkButton href="/surveys" variant="outline" size="sm">Sair do preview</LinkButton>
+          </AlertDescription>
         </Alert>
       )}
 

@@ -245,9 +245,11 @@ function SurveysList() {
                   {survey.endDate && <span>Fim: {formatDate(survey.endDate)}</span>}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <LinkButton href={`/surveys/results?id=${survey.id}`} variant="outline" size="sm">
-                    <BarChart2 className="w-3 h-3 mr-1" />Resultados
-                  </LinkButton>
+                  {survey.status !== 'Draft' && (
+                    <LinkButton href={`/surveys/results?id=${survey.id}`} variant="outline" size="sm">
+                      <BarChart2 className="w-3 h-3 mr-1" />Resultados
+                    </LinkButton>
+                  )}
                   <LinkButton href={`/surveys/answer?id=${survey.id}&preview=1`} variant="outline" size="sm">
                     <Eye className="w-3 h-3 mr-1" />Pré-visualizar
                   </LinkButton>
@@ -256,9 +258,11 @@ function SurveysList() {
                       <LinkIcon className="w-3 h-3 mr-1" />Copiar link
                     </Button>
                   )}
-                  <LinkButton href={`/surveys/edit?id=${survey.id}`} variant="outline" size="sm">
-                    <Pencil className="w-3 h-3 mr-1" />Editar
-                  </LinkButton>
+                  {survey.status === 'Draft' && (
+                    <LinkButton href={`/surveys/edit?id=${survey.id}`} variant="outline" size="sm">
+                      <Pencil className="w-3 h-3 mr-1" />Editar
+                    </LinkButton>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => handleDuplicate(survey.id)}>
                     <Copy className="w-3 h-3 mr-1" />Duplicar
                   </Button>

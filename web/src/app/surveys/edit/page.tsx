@@ -69,6 +69,19 @@ function EditForm() {
   if (loading) return <Skeleton className="h-32 w-full" />
   if (error && !survey) return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>
 
+  if (survey && survey.status !== 'Draft') return (
+    <div className="space-y-4 max-w-2xl">
+      <LinkButton href="/surveys" variant="outline" size="sm">
+        <ArrowLeft className="w-4 h-4 mr-1" />Voltar
+      </LinkButton>
+      <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+        <AlertDescription>
+          Apenas pesquisas em rascunho podem ser editadas. Esta pesquisa está {survey.status === 'Active' ? 'ativa' : 'encerrada'}.
+        </AlertDescription>
+      </Alert>
+    </div>
+  )
+
   return (
     <div className="space-y-6 max-w-2xl">
       <LinkButton href="/surveys" variant="outline" size="sm">
