@@ -12,7 +12,7 @@ public class ResendEmailService : IEmailService
     public async Task SendAccessCodeAsync(string to, string surveyTitle, string code, CancellationToken cancellationToken = default)
     {
         var message = new EmailMessage();
-        message.From = "Online Survey <noreply@survey.luanfernandes.dev>";
+        message.From = "Online Survey <no-reply@luanfernandes.dev>";
         message.To.Add(to);
         message.Subject = $"Seu código de acesso — {surveyTitle}";
         message.HtmlBody = $"""
