@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -14,6 +16,11 @@ namespace OnlineSurvey.Api.Tests.IntegrationTests;
 
 public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
@@ -54,7 +61,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         survey.Should().NotBeNull();
         survey!.Title.Should().Be(request.Title);
         survey.Status.Should().Be(SurveyStatus.Draft);
@@ -85,7 +92,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         survey!.Id.Should().Be(createdSurvey.Id);
     }
 
@@ -111,7 +118,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         survey!.Status.Should().Be(SurveyStatus.Active);
     }
 
@@ -126,7 +133,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var survey = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         survey!.Status.Should().Be(SurveyStatus.Closed);
     }
 
@@ -170,7 +177,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var results = await response.Content.ReadFromJsonAsync<SurveyResultResponse>();
+        var results = await response.Content.ReadFromJsonAsync<SurveyResultResponse>(JsonOptions);
         results!.TotalResponses.Should().Be(3);
         results.Questions[0].Options[0].Count.Should().Be(3);
         results.Questions[0].Options[0].Percentage.Should().Be(100);
@@ -188,7 +195,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var surveys = await response.Content.ReadFromJsonAsync<IEnumerable<SurveyResponse>>();
+        var surveys = await response.Content.ReadFromJsonAsync<IEnumerable<SurveyResponse>>(JsonOptions);
         surveys.Should().OnlyContain(s => s.Status == SurveyStatus.Active);
     }
 
@@ -231,7 +238,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result.Should().NotBeNull();
         result!.Items.Should().HaveCount(2);
         result.PageSize.Should().Be(2);
@@ -249,7 +256,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.Page.Should().Be(1);
     }
 
@@ -264,7 +271,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.PageSize.Should().Be(10);
     }
 
@@ -279,7 +286,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.PageSize.Should().Be(100);
     }
 
@@ -295,7 +302,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.Items.Should().OnlyContain(s => s.Status == SurveyStatus.Active);
     }
 
@@ -311,7 +318,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.Items.Should().OnlyContain(s => s.Status == SurveyStatus.Draft);
     }
 
@@ -327,7 +334,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.Items.Should().HaveCountGreaterThanOrEqualTo(2);
     }
 
@@ -343,7 +350,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updated = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var updated = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         updated!.Title.Should().Be("Updated Title");
         updated.Description.Should().Be("Updated Description");
     }
@@ -360,7 +367,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
         var getResponse = await _client.GetAsync($"/api/surveys/{survey.Id}");
 
         
-        var fetched = await getResponse.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var fetched = await getResponse.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         fetched!.Title.Should().Be("Persisted Title");
     }
 
@@ -378,7 +385,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var activated = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>();
+        var activated = await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions);
         activated!.Status.Should().Be(SurveyStatus.Active);
         activated.StartDate.Should().BeCloseTo(startDate, TimeSpan.FromSeconds(1));
         activated.EndDate.Should().BeCloseTo(endDate, TimeSpan.FromSeconds(1));
@@ -395,7 +402,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.Page.Should().Be(1);
     }
 
@@ -410,7 +417,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
 
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SurveyResponse>>(JsonOptions);
         result!.PageSize.Should().Be(10);
     }
 
@@ -435,7 +442,7 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
     {
         var request = CreateValidSurveyRequest();
         var response = await _client.PostAsJsonAsync("/api/surveys", request);
-        return (await response.Content.ReadFromJsonAsync<SurveyDetailResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions))!;
     }
 
     private async Task<SurveyDetailResponse> CreateAndActivateSurveyAsync()
@@ -443,6 +450,6 @@ public class SurveyEndpointsTests : IClassFixture<WebApplicationFactory<Program>
         var survey = await CreateSurveyAsync();
         var activateRequest = new ActivateSurveyRequest(null, null);
         var response = await _client.PostAsJsonAsync($"/api/surveys/{survey.Id}/activate", activateRequest);
-        return (await response.Content.ReadFromJsonAsync<SurveyDetailResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SurveyDetailResponse>(JsonOptions))!;
     }
 }
