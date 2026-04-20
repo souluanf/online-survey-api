@@ -17,9 +17,14 @@ export function Navbar() {
   return (
     <nav className="border-b bg-white">
       <div className="container mx-auto px-4 max-w-4xl flex items-center justify-between h-14">
-        <Link href="/surveys" className="font-semibold text-indigo-600 text-lg">
-          Online Survey
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/surveys" className="font-semibold text-indigo-600 text-lg">
+            Online Survey
+          </Link>
+          <Link href="/explore" className="text-sm text-zinc-600 hover:text-indigo-600">
+            Explorar
+          </Link>
+        </div>
         {!loading && (
           <div className="flex items-center gap-3">
             {user ? (

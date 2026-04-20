@@ -5,9 +5,28 @@ import { api } from '@/lib/api'
 import { SurveyResultResponse } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LinkButton } from '@/components/ui/link-button'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
+
+function exportCsv(result: SurveyResultResponse) {
+  const rows: string[] = ['Pergunta,Opção,Respostas,Percentual']
+  for (const q of result.questions) {
+    for (const o of q.options) {
+      const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
+      rows.push([esc(q.questionText), esc(o.optionText), String(o.count), `${o.percentage.toFixed(2)}%`].join(','))
+    }
+  }
+  const csv = '\uFEFF' + rows.join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${result.surveyTitle.replace(/[^a-z0-9]+/gi, '_')}_resultados.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 function barColor(pct: number) {
   if (pct > 50) return 'bg-green-500'
@@ -56,6 +75,9 @@ function ResultsContent() {
         <LinkButton href="/surveys" variant="outline" size="sm">
           <ArrowLeft className="w-4 h-4 mr-1" />Voltar às Pesquisas
         </LinkButton>
+        <Button variant="outline" size="sm" onClick={() => exportCsv(result)}>
+          <Download className="w-4 h-4 mr-1" />Exportar CSV
+        </Button>
       </div>
 
       <div>
