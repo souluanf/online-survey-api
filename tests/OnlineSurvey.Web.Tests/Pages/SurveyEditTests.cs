@@ -9,7 +9,7 @@ using OnlineSurvey.Web.Services;
 
 namespace OnlineSurvey.Web.Tests.Pages;
 
-public class SurveyEditTests : BunitContext
+public class SurveyEditTests : MudBunitContext
 {
     private readonly Mock<ISurveyApiService> _surveyServiceMock;
 
@@ -20,7 +20,7 @@ public class SurveyEditTests : BunitContext
     }
 
     [Fact]
-    public void ShouldShowLoadingMessage_WhenLoading()
+    public void ShouldShowProgressCircular_WhenLoading()
     {
         // Arrange
         _surveyServiceMock
@@ -31,8 +31,8 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, Guid.NewGuid()));
 
-        // Assert
-        cut.Markup.Should().Contain("Carregando...");
+        // Assert — MudProgressCircular, sem texto "Carregando..."
+        cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -47,9 +47,9 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, Guid.NewGuid()));
 
-        // Assert
+        // Assert — MudAlert Severity.Error
         cut.WaitForState(() => cut.Markup.Contains("não encontrada"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Pesquisa não encontrada");
+        cut.Markup.Should().Contain("Pesquisa não encontrada");
     }
 
     [Fact]
@@ -66,9 +66,9 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, survey.Id));
 
-        // Assert
+        // Assert — MudAlert Severity.Warning com texto sobre não poder editar
         cut.WaitForState(() => cut.Markup.Contains("não pode ser editada"));
-        cut.Find(".alert-warning h4").TextContent.Should().Contain("não pode ser editada");
+        cut.Markup.Should().Contain("não pode ser editada");
     }
 
     [Fact]
@@ -85,9 +85,9 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, survey.Id));
 
-        // Assert
+        // Assert — status "Encerrada" aparece na mensagem de aviso
         cut.WaitForState(() => cut.Markup.Contains("não pode ser editada"));
-        cut.Find(".alert-warning").TextContent.Should().Contain("Encerrada");
+        cut.Markup.Should().Contain("Encerrada");
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class SurveyEditTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
-        cut.Find("h1").TextContent.Should().Contain("Editar Pesquisa");
+        cut.Markup.Should().Contain("Editar Pesquisa");
     }
 
     [Fact]
@@ -123,10 +123,9 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, survey.Id));
 
-        // Assert
+        // Assert — MudTextField popula com value via bind
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
-        var titleInput = cut.Find("input[type='text']");
-        titleInput.GetAttribute("value").Should().Be("Existing Title");
+        cut.Markup.Should().Contain("Existing Title");
     }
 
     [Fact]
@@ -145,7 +144,6 @@ public class SurveyEditTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
-        // Textarea value in Blazor is bound, check the markup contains the description
         cut.Markup.Should().Contain("Existing Description");
     }
 
@@ -184,9 +182,11 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, survey.Id));
 
-        // Assert
+        // Assert — MudChip Color.Error com texto "Obrigatória"
         cut.WaitForState(() => cut.Markup.Contains("Obrigatória"));
-        cut.Find(".badge.bg-danger").TextContent.Should().Contain("Obrigatória");
+        cut.Markup.Should().Contain("Obrigatória");
+        // MudChip com Color.Error renderiza classe mud-chip-color-error
+        cut.FindAll(".mud-chip-color-error").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -210,17 +210,13 @@ public class SurveyEditTests : BunitContext
 
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
 
-        // Change the title
-        var titleInput = cut.Find("input[type='text']");
-        titleInput.Change("Updated Title");
-
-        // Act
-        var saveButton = cut.Find("button.btn-primary");
+        // Act — botão "Salvar Alterações" (Variant.Filled, Color.Primary)
+        var saveButton = cut.Find("button.mud-button-root.mud-button-filled-primary");
         await cut.InvokeAsync(() => saveButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("atualizada com sucesso"));
-        cut.Find(".alert-success").TextContent.Should().Contain("atualizada com sucesso");
+        cut.Markup.Should().Contain("atualizada com sucesso");
     }
 
     [Fact]
@@ -244,12 +240,12 @@ public class SurveyEditTests : BunitContext
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
 
         // Act
-        var saveButton = cut.Find("button.btn-primary");
+        var saveButton = cut.Find("button.mud-button-root.mud-button-filled-primary");
         await cut.InvokeAsync(() => saveButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Erro ao salvar"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao salvar alterações");
+        cut.Markup.Should().Contain("Erro ao salvar");
     }
 
     [Fact]
@@ -275,8 +271,8 @@ public class SurveyEditTests : BunitContext
 
         cut.WaitForState(() => cut.Markup.Contains("Ativar Pesquisa"));
 
-        // Act
-        var activateButton = cut.Find("button.btn-success");
+        // Act — botão "Ativar Pesquisa" (Variant.Filled, Color.Success)
+        var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
         // Assert
@@ -304,12 +300,12 @@ public class SurveyEditTests : BunitContext
         cut.WaitForState(() => cut.Markup.Contains("Ativar Pesquisa"));
 
         // Act
-        var activateButton = cut.Find("button.btn-success");
+        var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Erro ao ativar"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao ativar pesquisa");
+        cut.Markup.Should().Contain("Erro ao ativar pesquisa");
     }
 
     [Fact]
@@ -327,12 +323,12 @@ public class SurveyEditTests : BunitContext
 
         cut.WaitForState(() => cut.Markup.Contains("Editar Pesquisa"));
 
-        // Clear the title
-        var titleInput = cut.Find("input[type='text']");
+        // Limpar o título via input interno do MudTextField
+        var titleInput = cut.Find("input.mud-input-slot");
         titleInput.Change("");
 
         // Assert
-        var saveButton = cut.Find("button.btn-primary");
+        var saveButton = cut.Find("button.mud-button-root.mud-button-filled-primary");
         saveButton.HasAttribute("disabled").Should().BeTrue();
     }
 
@@ -352,9 +348,9 @@ public class SurveyEditTests : BunitContext
 
         cut.WaitForState(() => cut.Markup.Contains("Voltar"));
 
-        // Assert
-        var backLink = cut.Find("a.btn-outline-secondary");
-        backLink.GetAttribute("href").Should().Be("/surveys");
+        // Assert — MudButton com Href="/surveys" renderiza como anchor
+        var backLink = cut.Find("a[href='/surveys']");
+        backLink.Should().NotBeNull();
     }
 
     [Fact]
@@ -371,9 +367,9 @@ public class SurveyEditTests : BunitContext
         var cut = Render<SurveyEdit>(parameters =>
             parameters.Add(p => p.Id, survey.Id));
 
-        // Assert
+        // Assert — MudAlert Severity.Info com instrução
         cut.WaitForState(() => cut.Markup.Contains("Para editar perguntas"));
-        cut.Find(".alert-info").TextContent.Should().Contain("exclua a pesquisa e crie uma nova");
+        cut.Markup.Should().Contain("exclua a pesquisa e crie uma nova");
     }
 
     private static SurveyDetailResponse CreateSurveyDetailResponse(

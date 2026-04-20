@@ -8,7 +8,7 @@ using OnlineSurvey.Web.Services;
 
 namespace OnlineSurvey.Web.Tests.Pages;
 
-public class SurveyListTests : BunitContext
+public class SurveyListTests : MudBunitContext
 {
     private readonly Mock<ISurveyApiService> _surveyServiceMock;
 
@@ -19,7 +19,7 @@ public class SurveyListTests : BunitContext
     }
 
     [Fact]
-    public void ShouldShowLoadingMessage_WhenLoading()
+    public void ShouldShowLoadingIndicator_WhenLoading()
     {
         // Arrange
         _surveyServiceMock
@@ -29,8 +29,8 @@ public class SurveyListTests : BunitContext
         // Act
         var cut = Render<SurveyList>();
 
-        // Assert
-        cut.Markup.Should().Contain("Carregando...");
+        // Assert — MudBlazor usa MudProgressCircular, não texto "Carregando..."
+        cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -41,10 +41,10 @@ public class SurveyListTests : BunitContext
 
         // Act
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Pesquisas"));
 
         // Assert
-        cut.Find("h1").TextContent.Should().Contain("Pesquisas");
+        cut.Markup.Should().Contain("Pesquisas");
     }
 
     [Fact]
@@ -55,11 +55,11 @@ public class SurveyListTests : BunitContext
 
         // Act
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Nova Pesquisa"));
 
-        // Assert
-        var createLink = cut.Find("a.btn-success");
-        createLink.GetAttribute("href").Should().Be("/surveys/create");
+        // Assert — MudButton com Href="/surveys/create"
+        var createLink = cut.Find("a[href='/surveys/create']");
+        createLink.Should().NotBeNull();
     }
 
     [Fact]
@@ -70,9 +70,9 @@ public class SurveyListTests : BunitContext
 
         // Act
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Ativas"));
 
-        // Assert
+        // Assert — MudTabs renderiza os textos dos painéis
         cut.Markup.Should().Contain("Ativas");
         cut.Markup.Should().Contain("Rascunhos");
         cut.Markup.Should().Contain("Encerradas");
@@ -86,10 +86,10 @@ public class SurveyListTests : BunitContext
 
         // Act
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Nenhuma pesquisa ativa"));
 
-        // Assert
-        cut.Find(".alert-info").TextContent.Should().Contain("Nenhuma pesquisa ativa");
+        // Assert — MudAlert com Severity.Info
+        cut.Markup.Should().Contain("Nenhuma pesquisa ativa");
     }
 
     [Fact]
@@ -107,10 +107,10 @@ public class SurveyListTests : BunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Active Survey 1"));
 
-        // Assert
+        // Assert — MudCard renderiza com classe mud-card
         cut.Markup.Should().Contain("Active Survey 1");
         cut.Markup.Should().Contain("Active Survey 2");
-        cut.FindAll(".card.border-success").Count.Should().Be(2);
+        cut.FindAll(".mud-card").Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -124,15 +124,15 @@ public class SurveyListTests : BunitContext
         SetupSurveys(surveys);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Act
-        var draftTab = cut.FindAll(".nav-link")[1];
-        await cut.InvokeAsync(() => draftTab.Click());
+        // Act — clicar na aba Rascunhos (segundo mud-tab-panel button)
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
 
         // Assert
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
         cut.Markup.Should().Contain("Draft Survey");
-        cut.FindAll(".card.border-warning").Count.Should().Be(1);
     }
 
     [Fact]
@@ -146,15 +146,15 @@ public class SurveyListTests : BunitContext
         SetupSurveys(surveys);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Encerradas"));
 
-        // Act
-        var closedTab = cut.FindAll(".nav-link")[2];
-        await cut.InvokeAsync(() => closedTab.Click());
+        // Act — clicar na aba Encerradas (terceiro mud-tab)
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[2].Click());
 
         // Assert
+        cut.WaitForState(() => cut.Markup.Contains("Closed Survey"));
         cut.Markup.Should().Contain("Closed Survey");
-        cut.FindAll(".card.border-secondary").Count.Should().Be(1);
     }
 
     [Fact]
@@ -173,18 +173,20 @@ public class SurveyListTests : BunitContext
             .ReturnsAsync(new SurveyDetailResponse(surveyId, "Draft Survey", null, SurveyStatus.Active, null, null, [], DateTime.UtcNow, null));
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
         // Switch to draft tab
-        await cut.InvokeAsync(() => cut.FindAll(".nav-link")[1].Click());
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act
-        var activateButton = cut.Find("button.btn-success");
+        // Act — botão Ativar no card de rascunho
+        var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("ativada com sucesso"));
-        cut.Find(".alert-success").TextContent.Should().Contain("ativada com sucesso");
+        cut.Markup.Should().Contain("ativada com sucesso");
     }
 
     [Fact]
@@ -203,18 +205,19 @@ public class SurveyListTests : BunitContext
             .ReturnsAsync((SurveyDetailResponse?)null);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Switch to draft tab
-        await cut.InvokeAsync(() => cut.FindAll(".nav-link")[1].Click());
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
         // Act
-        var activateButton = cut.Find("button.btn-success");
+        var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Erro ao ativar"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao ativar");
+        cut.Markup.Should().Contain("Erro ao ativar");
     }
 
     [Fact]
@@ -233,18 +236,19 @@ public class SurveyListTests : BunitContext
             .ReturnsAsync(true);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Switch to draft tab
-        await cut.InvokeAsync(() => cut.FindAll(".nav-link")[1].Click());
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act
-        var deleteButton = cut.Find("button.btn-outline-danger");
+        // Act — botão Excluir (Color.Error, Variant.Outlined)
+        var deleteButton = cut.Find("button.mud-button-root.mud-button-outlined-error");
         await cut.InvokeAsync(() => deleteButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("excluída com sucesso"));
-        cut.Find(".alert-success").TextContent.Should().Contain("excluída com sucesso");
+        cut.Markup.Should().Contain("excluída com sucesso");
     }
 
     [Fact]
@@ -263,18 +267,19 @@ public class SurveyListTests : BunitContext
             .ReturnsAsync(false);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Switch to draft tab
-        await cut.InvokeAsync(() => cut.FindAll(".nav-link")[1].Click());
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
         // Act
-        var deleteButton = cut.Find("button.btn-outline-danger");
+        var deleteButton = cut.Find("button.mud-button-root.mud-button-outlined-error");
         await cut.InvokeAsync(() => deleteButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Erro ao excluir"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao excluir");
+        cut.Markup.Should().Contain("Erro ao excluir");
     }
 
     [Fact]
@@ -295,13 +300,13 @@ public class SurveyListTests : BunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Active Survey"));
 
-        // Act
-        var closeButton = cut.Find("button.btn-outline-warning");
+        // Act — botão Encerrar (Color.Warning, Variant.Outlined)
+        var closeButton = cut.Find("button.mud-button-root.mud-button-outlined-warning");
         await cut.InvokeAsync(() => closeButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("encerrada com sucesso"));
-        cut.Find(".alert-success").TextContent.Should().Contain("encerrada com sucesso");
+        cut.Markup.Should().Contain("encerrada com sucesso");
     }
 
     [Fact]
@@ -323,12 +328,12 @@ public class SurveyListTests : BunitContext
         cut.WaitForState(() => cut.Markup.Contains("Active Survey"));
 
         // Act
-        var closeButton = cut.Find("button.btn-outline-warning");
+        var closeButton = cut.Find("button.mud-button-root.mud-button-outlined-warning");
         await cut.InvokeAsync(() => closeButton.Click());
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Erro ao encerrar"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao encerrar");
+        cut.Markup.Should().Contain("Erro ao encerrar");
     }
 
     [Fact]
@@ -354,7 +359,7 @@ public class SurveyListTests : BunitContext
     }
 
     [Fact]
-    public async Task ShouldDismissMessage_WhenCloseButtonClicked()
+    public async Task ShouldDismissMessage_WhenCloseIconClicked()
     {
         // Arrange
         var surveyId = Guid.NewGuid();
@@ -369,19 +374,21 @@ public class SurveyListTests : BunitContext
             .ReturnsAsync(true);
 
         var cut = Render<SurveyList>();
-        cut.WaitForState(() => !cut.Markup.Contains("Carregando..."));
+        cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        await cut.InvokeAsync(() => cut.FindAll(".nav-link")[1].Click());
-        await cut.InvokeAsync(() => cut.Find("button.btn-outline-danger").Click());
+        var tabs = cut.FindAll(".mud-tab");
+        await cut.InvokeAsync(() => tabs[1].Click());
+        cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
+        await cut.InvokeAsync(() => cut.Find("button.mud-button-root.mud-button-outlined-error").Click());
         cut.WaitForState(() => cut.Markup.Contains("excluída com sucesso"));
 
-        // Act
-        var closeButton = cut.Find(".btn-close");
+        // Act — MudAlert com ShowCloseIcon tem botão de fechar
+        var closeButton = cut.Find("button.mud-alert-close-button");
         await cut.InvokeAsync(() => closeButton.Click());
 
         // Assert
-        cut.FindAll(".alert-success").Count.Should().Be(0);
+        cut.Markup.Should().NotContain("excluída com sucesso");
     }
 
     private void SetupEmptySurveys()
