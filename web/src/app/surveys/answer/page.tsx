@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { SurveyDetailResponse } from '@/lib/types'
@@ -16,7 +16,16 @@ import { CheckCircle2 } from 'lucide-react'
 type AccessState = 'loading' | 'email' | 'code' | 'granted' | 'denied' | 'inactive' | 'done'
 
 export default function SurveyAnswerPage() {
-  const { id } = useParams<{ id: string }>()
+  return (
+    <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+      <SurveyAnswerContent />
+    </Suspense>
+  )
+}
+
+function SurveyAnswerContent() {
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') ?? ''
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -30,6 +39,7 @@ export default function SurveyAnswerPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    if (!id) { setAccessState('denied'); return }
     if (authLoading) return
     api.surveys.get(id)
       .then((s: SurveyDetailResponse) => {
@@ -122,7 +132,7 @@ export default function SurveyAnswerPage() {
         <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
         <p className="text-lg font-semibold">Resposta enviada!</p>
         <div className="flex gap-3 justify-center">
-          <LinkButton href={`/surveys/${id}/results`} className="bg-indigo-600 hover:bg-indigo-700">
+          <LinkButton href={`/surveys/results?id=${id}`} className="bg-indigo-600 hover:bg-indigo-700">
             Ver Resultados
           </LinkButton>
           <LinkButton href="/surveys" variant="outline">

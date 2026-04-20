@@ -148,7 +148,7 @@ function SurveysList() {
                   {survey.endDate && <span>Fim: {formatDate(survey.endDate)}</span>}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <LinkButton href={`/surveys/${survey.id}/results`} variant="outline" size="sm">
+                  <LinkButton href={`/surveys/results?id=${survey.id}`} variant="outline" size="sm">
                     <BarChart2 className="w-3 h-3 mr-1" />Resultados
                   </LinkButton>
                   {survey.status === 'Draft' && (

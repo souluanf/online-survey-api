@@ -14,15 +14,13 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_API: ghcr.io/souluanf/online-survey-api
-  IMAGE_WEB: ghcr.io/souluanf/online-survey-web
 
 jobs:
-  build-and-deploy:
+  api:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -47,42 +45,12 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
           sudo apt-get update && sudo apt-get install -y doppler
 
-      - name: Fetch Doppler secrets for web build
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          doppler secrets get NEXT_PUBLIC_API_URL --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_API_URL={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_API_KEY --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_API_KEY={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_PROJECT_ID --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID={}" >> $GITHUB_ENV
-          doppler secrets get NEXT_PUBLIC_FIREBASE_APP_ID --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd | xargs -I{} echo "NEXT_PUBLIC_FIREBASE_APP_ID={}" >> $GITHUB_ENV
-
-      - name: Build and push Web image
-        uses: docker/build-push-action@v5
-        with:
-          context: web
-          file: web/Dockerfile
-          push: true
-          tags: ${{ env.IMAGE_WEB }}:latest,${{ env.IMAGE_WEB }}:${{ github.sha }}
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ env.NEXT_PUBLIC_FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ env.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ env.NEXT_PUBLIC_FIREBASE_APP_ID }}
-
       - name: Inject Doppler secrets into manifests
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           export APP_HOST=$(doppler secrets get APP_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          export WEB_HOST=$(doppler secrets get WEB_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
           envsubst < k8s/ingress.yaml > k8s/ingress.yaml.tmp && mv k8s/ingress.yaml.tmp k8s/ingress.yaml
-          envsubst < k8s/web-ingress.yaml > k8s/web-ingress.yaml.tmp && mv k8s/web-ingress.yaml.tmp k8s/web-ingress.yaml
 
       - name: Copy manifests to server
         uses: appleboy/scp-action@v0.1.7
@@ -104,4 +72,40 @@ jobs:
             kubectl apply -f /tmp/survey/k8s/postgres.yaml
             kubectl apply -f /tmp/survey/k8s/
             kubectl rollout restart deployment/survey-api -n survey
-            kubectl rollout restart deployment/survey-web -n survey
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Doppler CLI
+        run: |
+          curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
+          sudo apt-get update && sudo apt-get install -y doppler
+
+      - name: Build
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          doppler run --token $DOPPLER_TOKEN --project online-survey-api --config prd -- npm run build
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          export CLOUDFLARE_API_TOKEN=$(doppler secrets get CLOUDFLARE_API_TOKEN --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          export CLOUDFLARE_ACCOUNT_ID=$(doppler secrets get CLOUDFLARE_ACCOUNT_ID --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          npx wrangler pages deploy out --project-name=online-survey-web --branch=main --commit-dirty=true

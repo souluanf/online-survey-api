@@ -41,7 +41,7 @@ builder.Services.AddAuthorization();
 
 #pragma warning disable S5332 // HTTP is acceptable for localhost and internal Docker network
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:5000", "http://localhost:5173", "http://web:80"];
+    ?? ["http://localhost:5000", "http://localhost:5173", "http://web:80", "https://survey.luanfernandes.dev"];
 #pragma warning restore S5332
 
 builder.Services.AddCors(options =>

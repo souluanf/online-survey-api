@@ -1,11 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import { SurveyResultResponse } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LinkButton } from '@/components/ui/link-button'
-import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-react'
@@ -18,12 +17,22 @@ function barColor(pct: number) {
 }
 
 export default function ResultsPage() {
-  const { id } = useParams<{ id: string }>()
+  return (
+    <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+      <ResultsContent />
+    </Suspense>
+  )
+}
+
+function ResultsContent() {
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id') ?? ''
   const [result, setResult] = useState<SurveyResultResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!id) { setLoading(false); setError('ID da pesquisa não informado'); return }
     api.responses.results(id)
       .then(setResult)
       .catch((e: Error) => setError(e.message))
