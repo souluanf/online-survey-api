@@ -13,6 +13,7 @@ spec:
       labels:
         app: survey-postgres
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: postgres
           image: postgres:16-alpine
@@ -20,11 +21,29 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: onlinesurvey
+              valueFrom:
+                secretKeyRef:
+                  name: survey-postgres-secret
+                  key: POSTGRES_DB
             - name: POSTGRES_USER
-              value: survey
+              valueFrom:
+                secretKeyRef:
+                  name: survey-postgres-secret
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
-              value: Survey@2026!
+              valueFrom:
+                secretKeyRef:
+                  name: survey-postgres-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 1Gi
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data

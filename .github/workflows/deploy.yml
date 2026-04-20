@@ -1,14 +1,10 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'web/**'
-      - 'Dockerfile'
-      - 'k8s/**'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:
@@ -16,7 +12,41 @@ env:
   IMAGE_API: ghcr.io/souluanf/online-survey-api
 
 jobs:
+  changes:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+      - id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+          api=false
+          web=false
+          if echo "$CHANGED" | grep -qE '^(src/|Dockerfile|k8s/|\.github/workflows/deploy\.yml$)'; then
+            api=true
+          fi
+          if echo "$CHANGED" | grep -qE '^(web/|\.github/workflows/deploy\.yml$)'; then
+            web=true
+          fi
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+
   api:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,9 +78,31 @@ jobs:
       - name: Inject Doppler secrets into manifests
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           export APP_HOST=$(doppler secrets get APP_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          envsubst < k8s/ingress.yaml > k8s/ingress.yaml.tmp && mv k8s/ingress.yaml.tmp k8s/ingress.yaml
+          envsubst '${APP_HOST}' < k8s/ingress.yaml > k8s/ingress.yaml.tmp && mv k8s/ingress.yaml.tmp k8s/ingress.yaml
+          envsubst '${IMAGE_TAG}' < k8s/deployment.yaml > k8s/deployment.yaml.tmp && mv k8s/deployment.yaml.tmp k8s/deployment.yaml
+
+      - name: Generate postgres secret manifest
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          POSTGRES_DB=$(doppler secrets get POSTGRES_DB --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          POSTGRES_USER=$(doppler secrets get POSTGRES_USER --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          POSTGRES_PASSWORD=$(doppler secrets get POSTGRES_PASSWORD --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
+          cat > k8s/postgres-secret.yaml <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: survey-postgres-secret
+            namespace: survey
+          type: Opaque
+          stringData:
+            POSTGRES_DB: "${POSTGRES_DB}"
+            POSTGRES_USER: "${POSTGRES_USER}"
+            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+          EOF
 
       - name: Copy manifests to server
         uses: appleboy/scp-action@v0.1.7
@@ -69,11 +121,14 @@ jobs:
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             kubectl apply -f /tmp/survey/k8s/namespace.yaml
+            kubectl apply -f /tmp/survey/k8s/postgres-secret.yaml
             kubectl apply -f /tmp/survey/k8s/postgres.yaml
             kubectl apply -f /tmp/survey/k8s/
             kubectl rollout restart deployment/survey-api -n survey
 
   web:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:

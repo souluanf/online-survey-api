@@ -102,7 +102,9 @@ jobs:
             /o:"${{ secrets.SONAR_ORGANIZATION }}" \
             /d:sonar.token="${SONAR_TOKEN}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
+            /d:sonar.exclusions="web/**,**/Migrations/**,**/bin/**,**/obj/**" \
+            /d:sonar.coverage.exclusions="web/**,**/Migrations/**,**/Program.cs,**/Startup.cs,k8s/**"
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
