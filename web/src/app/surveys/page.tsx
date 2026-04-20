@@ -180,7 +180,14 @@ function SurveysList() {
         </div>
         <Select value={statusFilter} onValueChange={v => setStatusFilter(v ?? 'all')}>
           <SelectTrigger className="md:w-48">
-            <SelectValue />
+            <SelectValue>
+              {(v) => {
+                if (v === 'Draft') return 'Rascunho'
+                if (v === 'Active') return 'Ativa'
+                if (v === 'Closed') return 'Encerrada'
+                return 'Todos os status'
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>

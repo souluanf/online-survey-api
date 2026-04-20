@@ -180,7 +180,13 @@ function CreateSurveyForm() {
             <Label>Modo de acesso</Label>
             <Select value={accessMode} onValueChange={setAccessMode}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {(v) => {
+                    if (v === '1') return 'Código por email'
+                    if (v === '2') return 'Requer login'
+                    return 'Público anônimo'
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">Público anônimo</SelectItem>
