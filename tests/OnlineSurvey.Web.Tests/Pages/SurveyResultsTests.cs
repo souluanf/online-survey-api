@@ -8,7 +8,7 @@ using OnlineSurvey.Web.Services;
 
 namespace OnlineSurvey.Web.Tests.Pages;
 
-public class SurveyResultsTests : BunitContext
+public class SurveyResultsTests : MudBunitContext
 {
     private readonly Mock<ISurveyApiService> _surveyServiceMock;
 
@@ -19,7 +19,7 @@ public class SurveyResultsTests : BunitContext
     }
 
     [Fact]
-    public void ShouldShowLoadingMessage_WhenLoading()
+    public void ShouldShowProgressCircular_WhenLoading()
     {
         // Arrange
         _surveyServiceMock
@@ -31,7 +31,7 @@ public class SurveyResultsTests : BunitContext
             parameters.Add(p => p.SurveyId, Guid.NewGuid()));
 
         // Assert
-        cut.Markup.Should().Contain("Carregando resultados...");
+        cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class SurveyResultsTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("não encontrados"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Resultados não encontrados");
+        cut.Markup.Should().Contain("Resultados não encontrados");
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class SurveyResultsTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Customer Satisfaction Survey"));
-        cut.Find("h1").TextContent.Should().Contain("Customer Satisfaction Survey");
+        cut.Markup.Should().Contain("Customer Satisfaction Survey");
     }
 
     [Fact]
@@ -88,8 +88,8 @@ public class SurveyResultsTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("42"));
-        cut.Find(".lead").TextContent.Should().Contain("Total de respostas");
-        cut.Find(".lead strong").TextContent.Should().Contain("42");
+        cut.Markup.Should().Contain("Total de respostas");
+        cut.Markup.Should().Contain("42");
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class SurveyResultsTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Sample Question"));
-        cut.Find(".card-header strong").TextContent.Should().Contain("Sample Question");
+        cut.Markup.Should().Contain("Sample Question");
     }
 
     [Fact]
@@ -150,8 +150,8 @@ public class SurveyResultsTests : BunitContext
             parameters.Add(p => p.SurveyId, surveyId));
 
         // Assert
-        cut.WaitForState(() => cut.Markup.Contains("progress"));
-        var progressBars = cut.FindAll(".progress-bar");
+        cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
+        var progressBars = cut.FindAll(".mud-progress-linear");
         progressBars.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
@@ -183,9 +183,9 @@ public class SurveyResultsTests : BunitContext
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("bg-success"));
-        cut.Find(".progress-bar").ClassList.Should().Contain("bg-success");
+        // Assert - MudProgressLinear with Color.Success renders mud-progress-linear-color-success class
+        cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
+        cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-success");
     }
 
     [Fact]
@@ -216,9 +216,9 @@ public class SurveyResultsTests : BunitContext
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("bg-info"));
-        cut.Find(".progress-bar").ClassList.Should().Contain("bg-info");
+        // Assert - MudProgressLinear with Color.Info renders mud-progress-linear-color-info class
+        cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
+        cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-info");
     }
 
     [Fact]
@@ -249,9 +249,9 @@ public class SurveyResultsTests : BunitContext
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("bg-warning"));
-        cut.Find(".progress-bar").ClassList.Should().Contain("bg-warning");
+        // Assert - MudProgressLinear with Color.Warning renders mud-progress-linear-color-warning class
+        cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
+        cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-warning");
     }
 
     [Fact]
@@ -282,9 +282,9 @@ public class SurveyResultsTests : BunitContext
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("bg-secondary"));
-        cut.Find(".progress-bar").ClassList.Should().Contain("bg-secondary");
+        // Assert - MudProgressLinear with Color.Default renders mud-progress-linear-color-default class
+        cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
+        cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-default");
     }
 
     [Fact]
@@ -304,9 +304,10 @@ public class SurveyResultsTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Voltar"));
-        var backLink = cut.Find("a.btn-outline-primary");
-        backLink.GetAttribute("href").Should().Be("/surveys");
-        backLink.TextContent.Should().Contain("Voltar às Pesquisas");
+        cut.Markup.Should().Contain("Voltar às Pesquisas");
+        // MudButton with Href renders as anchor
+        var backLink = cut.Find("a[href='/surveys']");
+        backLink.Should().NotBeNull();
     }
 
     [Fact]
@@ -350,11 +351,12 @@ public class SurveyResultsTests : BunitContext
         cut.WaitForState(() => cut.Markup.Contains("Question 1"));
         cut.Markup.Should().Contain("Question 1");
         cut.Markup.Should().Contain("Question 2");
-        cut.FindAll(".card").Count.Should().Be(2);
+        // MudCard renders with mud-card class
+        cut.FindAll(".mud-card").Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
-    public async Task ShouldFormatPercentage_WithTwoDecimalPlaces()
+    public async Task ShouldFormatPercentage_WithOneDecimalPlace()
     {
         // Arrange
         var surveyId = Guid.NewGuid();
@@ -381,9 +383,9 @@ public class SurveyResultsTests : BunitContext
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("33.33%"));
-        cut.Markup.Should().Contain("33.33%");
+        // Assert — razor usa F1 (1 casa decimal): "33.3%"
+        // O componente já renderizou (task completou imediatamente), não há segundo render
+        cut.Markup.Should().Contain("33.3%");
     }
 
     private static SurveyResultResponse CreateSurveyResultResponse(

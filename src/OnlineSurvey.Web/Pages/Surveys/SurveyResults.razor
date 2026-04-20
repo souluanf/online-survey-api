@@ -41,7 +41,7 @@ else
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-1">
                             <MudText Typo="Typo.body2" Class="font-weight-medium">@option.OptionText</MudText>
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                @option.Count votos &nbsp;—&nbsp; @option.Percentage.ToString("F1")%
+                                @option.Count votos &nbsp;—&nbsp; @option.Percentage.ToString("F1", CultureInfo.InvariantCulture)%
                             </MudText>
                         </MudStack>
                         <MudProgressLinear Value="@option.Percentage"

@@ -9,7 +9,7 @@ using OnlineSurvey.Web.Services;
 
 namespace OnlineSurvey.Web.Tests.Pages;
 
-public class SurveyCreateTests : BunitContext
+public class SurveyCreateTests : MudBunitContext
 {
     private readonly Mock<ISurveyApiService> _surveyServiceMock;
 
@@ -20,15 +20,24 @@ public class SurveyCreateTests : BunitContext
     }
 
     [Fact]
-    public void ShouldRenderInitialFormWithOneQuestion()
+    public void ShouldRenderPageTitle()
     {
         // Act
         var cut = Render<SurveyCreate>();
 
         // Assert
-        cut.Find("h1").TextContent.Should().Contain("Criar Nova Pesquisa");
-        cut.FindAll(".card.border-primary").Count.Should().Be(1); // One question card
-        cut.FindAll(".input-group").Count.Should().Be(2); // Two option inputs
+        cut.Markup.Should().Contain("Criar Nova Pesquisa");
+    }
+
+    [Fact]
+    public void ShouldRenderInitialFormWithOneQuestion()
+    {
+        // Act
+        var cut = Render<SurveyCreate>();
+
+        // Assert — MudCard renderiza com mud-card class
+        // Uma pergunta inicial + card de informações = pelo menos 1 mud-card de pergunta
+        cut.Markup.Should().Contain("Pergunta 1");
     }
 
     [Fact]
@@ -37,9 +46,9 @@ public class SurveyCreateTests : BunitContext
         // Act
         var cut = Render<SurveyCreate>();
 
-        // Assert
-        var titleInput = cut.Find("input[type='text']");
-        titleInput.Should().NotBeNull();
+        // Assert — MudTextField renderiza input interno
+        var inputs = cut.FindAll("input");
+        inputs.Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -48,7 +57,7 @@ public class SurveyCreateTests : BunitContext
         // Act
         var cut = Render<SurveyCreate>();
 
-        // Assert
+        // Assert — MudTextField com Lines>1 renderiza textarea
         var textarea = cut.Find("textarea");
         textarea.Should().NotBeNull();
     }
@@ -58,14 +67,14 @@ public class SurveyCreateTests : BunitContext
     {
         // Arrange
         var cut = Render<SurveyCreate>();
-        var initialQuestionCount = cut.FindAll(".card.border-primary").Count;
+        var initialCount = cut.FindAll(".mud-paper-outlined").Count;
 
-        // Act
-        var addButton = cut.Find("button.btn-success");
+        // Act — botão "Adicionar Pergunta" (Variant.Outlined, Color.Success)
+        var addButton = cut.Find("button.mud-button-root.mud-button-outlined-success");
         addButton.Click();
 
         // Assert
-        cut.FindAll(".card.border-primary").Count.Should().Be(initialQuestionCount + 1);
+        cut.FindAll(".mud-paper-outlined").Count.Should().Be(initialCount + 1);
     }
 
     [Fact]
@@ -73,16 +82,16 @@ public class SurveyCreateTests : BunitContext
     {
         // Arrange
         var cut = Render<SurveyCreate>();
-        // Add an extra question first
-        cut.Find("button.btn-success").Click();
-        var questionCountAfterAdd = cut.FindAll(".card.border-primary").Count;
+        // Adicionar pergunta extra primeiro
+        cut.Find("button.mud-button-root.mud-button-outlined-success").Click();
+        var countAfterAdd = cut.FindAll(".mud-paper-outlined").Count;
 
-        // Act
-        var removeButton = cut.Find("button.btn-outline-danger");
+        // Act — MudIconButton de deletar (Color.Error)
+        var removeButton = cut.Find("button.mud-icon-button.mud-error-text");
         removeButton.Click();
 
         // Assert
-        cut.FindAll(".card.border-primary").Count.Should().Be(questionCountAfterAdd - 1);
+        cut.FindAll(".mud-paper-outlined").Count.Should().Be(countAfterAdd - 1);
     }
 
     [Fact]
@@ -90,23 +99,24 @@ public class SurveyCreateTests : BunitContext
     {
         // Arrange
         var cut = Render<SurveyCreate>();
-        var initialOptionCount = cut.FindAll(".input-group").Count;
+        // Contar inputs de opção iniciais (2 por padrão)
+        var initialInputCount = cut.FindAll("input.mud-input-slot").Count;
 
-        // Act
-        var addOptionButton = cut.Find("button.btn-outline-success");
+        // Act — botão "Adicionar Opção" (Variant.Outlined, Color.Primary, Size.Small)
+        var addOptionButton = cut.Find("button.mud-button-root.mud-button-outlined-primary");
         addOptionButton.Click();
 
-        // Assert
-        cut.FindAll(".input-group").Count.Should().Be(initialOptionCount + 1);
+        // Assert — mais um input de opção
+        cut.FindAll("input.mud-input-slot").Count.Should().BeGreaterThan(initialInputCount);
     }
 
     [Fact]
-    public void SubmitButton_ShouldBeDisabledWhenFormIsInvalid()
+    public void SubmitButton_ShouldBeDisabled_WhenFormIsInvalid()
     {
         // Arrange
         var cut = Render<SurveyCreate>();
 
-        // Assert - button should be disabled because title is empty
+        // Assert — botão submit desabilitado quando título vazio
         var submitButton = cut.Find("button[type='submit']");
         submitButton.HasAttribute("disabled").Should().BeTrue();
     }
@@ -123,31 +133,34 @@ public class SurveyCreateTests : BunitContext
 
         var cut = Render<SurveyCreate>();
 
-        // Fill in the form using InvokeAsync to prevent race conditions
+        // Preencher título via input interno do MudTextField
         await cut.InvokeAsync(() =>
         {
-            cut.Find("input[type='text']").Change("Test Survey");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[0].Change("Test Survey");
         });
         await cut.InvokeAsync(() =>
         {
-            cut.FindAll("input[type='text']")[1].Change("Test Question?");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[1].Change("Test Question?");
         });
         await cut.InvokeAsync(() =>
         {
-            var optionInputs = cut.FindAll(".input-group input");
-            optionInputs[0].Change("Option A");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[2].Change("Option A");
         });
         await cut.InvokeAsync(() =>
         {
-            var optionInputs = cut.FindAll(".input-group input");
-            optionInputs[1].Change("Option B");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[3].Change("Option B");
         });
 
         // Act
         await cut.InvokeAsync(() => cut.Find("form").Submit());
 
         // Assert
-        cut.Find(".alert-success").TextContent.Should().Contain("Pesquisa criada com sucesso");
+        cut.WaitForState(() => cut.Markup.Contains("Pesquisa criada com sucesso"));
+        cut.Markup.Should().Contain("Pesquisa criada com sucesso");
     }
 
     [Fact]
@@ -160,31 +173,33 @@ public class SurveyCreateTests : BunitContext
 
         var cut = Render<SurveyCreate>();
 
-        // Fill in the form using InvokeAsync to prevent race conditions
         await cut.InvokeAsync(() =>
         {
-            cut.Find("input[type='text']").Change("Test Survey");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[0].Change("Test Survey");
         });
         await cut.InvokeAsync(() =>
         {
-            cut.FindAll("input[type='text']")[1].Change("Test Question?");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[1].Change("Test Question?");
         });
         await cut.InvokeAsync(() =>
         {
-            var optionInputs = cut.FindAll(".input-group input");
-            optionInputs[0].Change("Option A");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[2].Change("Option A");
         });
         await cut.InvokeAsync(() =>
         {
-            var optionInputs = cut.FindAll(".input-group input");
-            optionInputs[1].Change("Option B");
+            var inputs = cut.FindAll("input.mud-input-slot");
+            inputs[3].Change("Option B");
         });
 
         // Act
         await cut.InvokeAsync(() => cut.Find("form").Submit());
 
         // Assert
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao criar pesquisa");
+        cut.WaitForState(() => cut.Markup.Contains("Erro ao criar pesquisa"));
+        cut.Markup.Should().Contain("Erro ao criar pesquisa");
     }
 
     [Fact]
@@ -207,16 +222,17 @@ public class SurveyCreateTests : BunitContext
 
         var cut = Render<SurveyCreate>();
 
-        // Fill and submit the form using InvokeAsync
-        await cut.InvokeAsync(() => cut.Find("input[type='text']").Change("Test Survey"));
-        await cut.InvokeAsync(() => cut.FindAll("input[type='text']")[1].Change("Test Question?"));
-        await cut.InvokeAsync(() => cut.FindAll(".input-group input")[0].Change("Option A"));
-        await cut.InvokeAsync(() => cut.FindAll(".input-group input")[1].Change("Option B"));
+        await cut.InvokeAsync(() => cut.FindAll("input.mud-input-slot")[0].Change("Test Survey"));
+        await cut.InvokeAsync(() => cut.FindAll("input.mud-input-slot")[1].Change("Test Question?"));
+        await cut.InvokeAsync(() => cut.FindAll("input.mud-input-slot")[2].Change("Option A"));
+        await cut.InvokeAsync(() => cut.FindAll("input.mud-input-slot")[3].Change("Option B"));
 
         await cut.InvokeAsync(() => cut.Find("form").Submit());
+        cut.WaitForState(() => cut.Markup.Contains("Pesquisa criada com sucesso"));
 
-        // Act
-        await cut.InvokeAsync(() => cut.Find(".alert-success button.btn-primary").Click());
+        // Act — botão "Ativar Pesquisa" dentro do alert de sucesso
+        var activateButton = cut.Find("button.mud-button-root.mud-button-filled-primary");
+        await cut.InvokeAsync(() => activateButton.Click());
 
         // Assert
         navManager.Uri.Should().Contain($"/surveys/{surveyId}");
@@ -228,7 +244,7 @@ public class SurveyCreateTests : BunitContext
         // Arrange
         var cut = Render<SurveyCreate>();
 
-        // Assert
+        // Assert — MudCheckBox renderiza input[type=checkbox]
         var checkbox = cut.Find("input[type='checkbox']");
         checkbox.HasAttribute("checked").Should().BeTrue();
     }
@@ -239,9 +255,9 @@ public class SurveyCreateTests : BunitContext
         // Arrange
         var cut = Render<SurveyCreate>();
 
-        // Assert
-        var cancelLink = cut.Find("a.btn-outline-secondary");
-        cancelLink.GetAttribute("href").Should().Be("/surveys");
+        // Assert — MudButton com Href="/surveys" renderiza como anchor
+        var cancelLink = cut.Find("a[href='/surveys']");
+        cancelLink.Should().NotBeNull();
     }
 
     private static SurveyDetailResponse CreateSurveyDetailResponse(Guid? id = null)

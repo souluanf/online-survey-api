@@ -1,15 +1,15 @@
 using Bunit;
 using FluentAssertions;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using MudBlazor;
 using OnlineSurvey.Web.Models;
 using OnlineSurvey.Web.Pages.Surveys;
 using OnlineSurvey.Web.Services;
 
 namespace OnlineSurvey.Web.Tests.Pages;
 
-public class SurveyAnswerTests : BunitContext
+public class SurveyAnswerTests : MudBunitContext
 {
     private readonly Mock<ISurveyApiService> _surveyServiceMock;
 
@@ -20,7 +20,7 @@ public class SurveyAnswerTests : BunitContext
     }
 
     [Fact]
-    public void ShouldShowLoadingMessage_WhenLoading()
+    public void ShouldShowProgressCircular_WhenLoading()
     {
         // Arrange
         _surveyServiceMock
@@ -31,8 +31,8 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, Guid.NewGuid()));
 
-        // Assert
-        cut.Markup.Should().Contain("Carregando pesquisa...");
+        // Assert — MudProgressCircular, sem texto "Carregando pesquisa..."
+        cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -47,9 +47,9 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, Guid.NewGuid()));
 
-        // Assert
+        // Assert — MudAlert Severity.Error
         cut.WaitForState(() => cut.Markup.Contains("não encontrada"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Pesquisa não encontrada");
+        cut.Markup.Should().Contain("Pesquisa não encontrada");
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class SurveyAnswerTests : BunitContext
 
         // Assert
         cut.WaitForState(() => cut.Markup.Contains("Test Survey Title"));
-        cut.Find("h1").TextContent.Should().Contain("Test Survey Title");
+        cut.Markup.Should().Contain("Test Survey Title");
     }
 
     [Fact]
@@ -85,9 +85,9 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        // Assert
+        // Assert — MudText Typo.subtitle1 com a descrição
         cut.WaitForState(() => cut.Markup.Contains("Test Description"));
-        cut.Find(".lead").TextContent.Should().Contain("Test Description");
+        cut.Markup.Should().Contain("Test Description");
     }
 
     [Fact]
@@ -104,13 +104,13 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        // Assert
+        // Assert — MudCard renderiza com mud-card class
         cut.WaitForState(() => cut.Markup.Contains("Question 1"));
-        cut.FindAll(".card").Count.Should().BeGreaterThanOrEqualTo(1);
+        cut.FindAll(".mud-card").Count.Should().BeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
-    public async Task ShouldRenderOptions_AsRadioButtons()
+    public async Task ShouldRenderOptions_AsMudRadios()
     {
         // Arrange
         var survey = CreateSurveyDetailResponse("Test Survey");
@@ -123,10 +123,9 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("radio"));
-        var radioButtons = cut.FindAll("input[type='radio']");
-        radioButtons.Count.Should().BeGreaterThanOrEqualTo(2);
+        // Assert — MudRadio renderiza input[type=radio]
+        cut.WaitForState(() => cut.FindAll("input[type='radio']").Count >= 2);
+        cut.FindAll("input[type='radio']").Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -143,9 +142,9 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        // Assert
-        cut.WaitForState(() => cut.Markup.Contains("text-danger"));
-        cut.Find(".text-danger").TextContent.Should().Contain("*");
+        // Assert — MudText Color.Error com "*"
+        cut.WaitForState(() => cut.Markup.Contains("mud-error-text"));
+        cut.Find(".mud-error-text").TextContent.Should().Contain("*");
     }
 
     [Fact]
@@ -163,12 +162,13 @@ public class SurveyAnswerTests : BunitContext
 
         cut.WaitForState(() => cut.Markup.Contains("Enviar Respostas"));
 
-        // Act - submit without selecting any option
+        // Act — submeter sem selecionar opção
         var form = cut.Find("form");
         await cut.InvokeAsync(() => form.Submit());
 
-        // Assert
-        cut.Find(".alert-danger").TextContent.Should().Contain("Por favor, responda a pergunta");
+        // Assert — MudAlert Severity.Error com mensagem de validação
+        cut.WaitForState(() => cut.Markup.Contains("Por favor, responda a pergunta"));
+        cut.Markup.Should().Contain("Por favor, responda a pergunta");
     }
 
     [Fact]
@@ -190,19 +190,19 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        cut.WaitForState(() => cut.Markup.Contains("radio"));
+        cut.WaitForState(() => cut.FindAll("input[type='radio']").Count >= 2);
 
-        // Select an option
-        var radioButton = cut.Find($"input[id='{optionId}']");
-        radioButton.Change(new ChangeEventArgs { Value = optionId.ToString() });
+        // Selecionar opção via MudRadioGroup ValueChanged
+        var radioGroup = cut.FindComponent<MudRadioGroup<Guid>>();
+        await cut.InvokeAsync(() => radioGroup.Instance.ValueChanged.InvokeAsync(optionId));
 
         // Act
         var form = cut.Find("form");
         await cut.InvokeAsync(() => form.Submit());
 
-        // Assert
+        // Assert — tela de sucesso com "Obrigado por participar!"
         cut.WaitForState(() => cut.Markup.Contains("Obrigado por participar"));
-        cut.Find(".alert-success").TextContent.Should().Contain("Obrigado por participar");
+        cut.Markup.Should().Contain("Obrigado por participar");
     }
 
     [Fact]
@@ -224,19 +224,18 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        cut.WaitForState(() => cut.Markup.Contains("radio"));
+        cut.WaitForState(() => cut.FindAll("input[type='radio']").Count >= 2);
 
-        // Select an option
-        var radioButton = cut.Find($"input[id='{optionId}']");
-        radioButton.Change(new ChangeEventArgs { Value = optionId.ToString() });
+        var radioGroup = cut.FindComponent<MudRadioGroup<Guid>>();
+        await cut.InvokeAsync(() => radioGroup.Instance.ValueChanged.InvokeAsync(optionId));
 
         // Act
         var form = cut.Find("form");
         await cut.InvokeAsync(() => form.Submit());
 
         // Assert
-        cut.WaitForState(() => cut.Markup.Contains("Erro ao enviar"));
-        cut.Find(".alert-danger").TextContent.Should().Contain("Erro ao enviar resposta");
+        cut.WaitForState(() => cut.Markup.Contains("Erro ao enviar resposta"));
+        cut.Markup.Should().Contain("Erro ao enviar resposta");
     }
 
     [Fact]
@@ -259,20 +258,20 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        cut.WaitForState(() => cut.Markup.Contains("radio"));
+        cut.WaitForState(() => cut.FindAll("input[type='radio']").Count >= 2);
 
-        // Select and submit
-        var radioButton = cut.Find($"input[id='{optionId}']");
-        radioButton.Change(new ChangeEventArgs { Value = optionId.ToString() });
+        var radioGroup = cut.FindComponent<MudRadioGroup<Guid>>();
+        await cut.InvokeAsync(() => radioGroup.Instance.ValueChanged.InvokeAsync(optionId));
         await cut.InvokeAsync(() => cut.Find("form").Submit());
 
         cut.WaitForState(() => cut.Markup.Contains("Obrigado"));
 
-        // Assert
-        var links = cut.FindAll(".alert-success a");
-        links.Should().HaveCountGreaterThanOrEqualTo(2);
-        links[0].GetAttribute("href").Should().Contain($"/surveys/{surveyId}/results");
-        links[1].GetAttribute("href").Should().Be("/surveys");
+        // Assert — links Ver Resultados e Voltar às Pesquisas
+        var resultLink = cut.Find($"a[href='/surveys/{surveyId}/results']");
+        resultLink.Should().NotBeNull();
+
+        var surveysLink = cut.Find("a[href='/surveys']");
+        surveysLink.Should().NotBeNull();
     }
 
     [Fact]
@@ -295,16 +294,15 @@ public class SurveyAnswerTests : BunitContext
         var cut = Render<SurveyAnswer>(parameters =>
             parameters.Add(p => p.SurveyId, survey.Id));
 
-        cut.WaitForState(() => cut.Markup.Contains("radio"));
+        cut.WaitForState(() => cut.FindAll("input[type='radio']").Count >= 2);
 
-        // Select an option
-        var radioButton = cut.Find($"input[id='{optionId}']");
-        radioButton.Change(new ChangeEventArgs { Value = optionId.ToString() });
+        var radioGroup = cut.FindComponent<MudRadioGroup<Guid>>();
+        await cut.InvokeAsync(() => radioGroup.Instance.ValueChanged.InvokeAsync(optionId));
 
-        // Act - start submitting
+        // Act — iniciar submit sem completar
         var submitTask = cut.InvokeAsync(() => cut.Find("form").Submit());
 
-        // Assert - button should show loading state
+        // Assert — botão desabilitado e texto "Enviando..."
         cut.WaitForState(() => cut.Markup.Contains("Enviando"));
         cut.Find("button[type='submit']").HasAttribute("disabled").Should().BeTrue();
 
