@@ -1,10 +1,22 @@
-name: Deploy
+name: Deploy API
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Dockerfile'
+      - 'k8s/**'
+      - '.github/workflows/deploy-api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Dockerfile'
+      - 'k8s/**'
+      - '.github/workflows/deploy-api.yml'
   workflow_dispatch:
 
 env:
@@ -12,41 +24,79 @@ env:
   IMAGE_API: ghcr.io/souluanf/online-survey-api
 
 jobs:
-  changes:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+  build-test-sonar:
+    name: Build, Test & SonarCloud Quality Gate
     runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      web: ${{ steps.filter.outputs.web }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-          fetch-depth: 2
-      - id: filter
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "api=true" >> "$GITHUB_OUTPUT"
-            echo "web=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          CHANGED=$(git diff --name-only HEAD^ HEAD)
-          echo "Changed files:"
-          echo "$CHANGED"
-          api=false
-          web=false
-          if echo "$CHANGED" | grep -qE '^(src/|Dockerfile|k8s/|\.github/workflows/deploy\.yml$)'; then
-            api=true
-          fi
-          if echo "$CHANGED" | grep -qE '^(web/|\.github/workflows/deploy\.yml$)'; then
-            web=true
-          fi
-          echo "api=$api" >> "$GITHUB_OUTPUT"
-          echo "web=$web" >> "$GITHUB_OUTPUT"
+          fetch-depth: 0
 
-  api:
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.api == 'true'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Install SonarCloud scanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Install coverage tool
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Begin SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"${{ secrets.SONAR_PROJECT_KEY }}" \
+            /o:"${{ secrets.SONAR_ORGANIZATION }}" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
+            /d:sonar.exclusions="web/**,**/Migrations/**,**/bin/**,**/obj/**" \
+            /d:sonar.coverage.exclusions="web/**,**/Migrations/**,**/Program.cs,**/Startup.cs,k8s/**" \
+            /d:sonar.qualitygate.wait=true \
+            /d:sonar.qualitygate.timeout=300
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test with coverage
+        run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o coverage.xml
+
+      - name: End SonarCloud analysis (blocks on Quality Gate failure)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+
+  deploy:
+    name: Deploy to k3s
+    needs: build-test-sonar
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -125,42 +175,3 @@ jobs:
             kubectl apply -f /tmp/survey/k8s/postgres.yaml
             kubectl apply -f /tmp/survey/k8s/
             kubectl rollout restart deployment/survey-api -n survey
-
-  web:
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Doppler CLI
-        run: |
-          curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
-          sudo apt-get update && sudo apt-get install -y doppler
-
-      - name: Build
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          doppler run --token $DOPPLER_TOKEN --project online-survey-api --config prd -- npm run build
-
-      - name: Deploy to Cloudflare Pages
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          export CLOUDFLARE_API_TOKEN=$(doppler secrets get CLOUDFLARE_API_TOKEN --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          export CLOUDFLARE_ACCOUNT_ID=$(doppler secrets get CLOUDFLARE_ACCOUNT_ID --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          npx wrangler pages deploy out --project-name=online-survey-web --branch=main --commit-dirty=true
