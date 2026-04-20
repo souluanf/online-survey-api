@@ -132,14 +132,16 @@ function CreateSurveyForm() {
 
   if (createdId) {
     return (
-      <Card className="max-w-md mx-auto mt-12">
+      <Card className="max-w-md mx-auto mt-12 border-zinc-200">
         <CardHeader>
-          <CardTitle className="text-green-700">Pesquisa criada!</CardTitle>
+          <CardTitle className="font-heading text-xl" style={{ color: 'var(--ink)' }}>
+            Pesquisa criada!
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-zinc-600">O que deseja fazer agora?</p>
+          <p className="text-zinc-500">O que deseja fazer agora?</p>
           <div className="flex gap-3">
-            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleActivate}>
+            <Button onClick={handleActivate}>
               Ativar pesquisa
             </Button>
             <Button variant="outline" onClick={() => router.push('/surveys')}>
@@ -154,13 +156,20 @@ function CreateSurveyForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Nova Pesquisa</h1>
+        <h1
+          className="font-heading text-2xl md:text-3xl font-bold"
+          style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+        >
+          Nova Pesquisa
+        </h1>
       </div>
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Informações</CardTitle></CardHeader>
+      <Card className="border-zinc-200">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-zinc-700">Informações</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Título *</Label>
@@ -173,8 +182,10 @@ function CreateSurveyForm() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Configurações de Acesso</CardTitle></CardHeader>
+      <Card className="border-zinc-200">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-zinc-700">Configurações de Acesso</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Modo de acesso</Label>
@@ -219,23 +230,25 @@ function CreateSurveyForm() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-zinc-200">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Perguntas</CardTitle>
-          <Button type="button" size="sm" variant="outline" onClick={addQuestion}>
+          <CardTitle className="text-base font-semibold text-zinc-700">Perguntas</CardTitle>
+          <Button type="button" size="sm" variant="ghost" onClick={addQuestion}
+            className="text-zinc-500 hover:text-[var(--ink)] hover:bg-amber-50"
+          >
             <Plus className="w-4 h-4 mr-1" />Adicionar Pergunta
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
           {questions.map((q, qi) => (
-            <div key={qi} className="border rounded-lg p-4 space-y-3">
+            <div key={qi} className="border border-zinc-200 rounded-lg p-4 space-y-3 bg-white">
               <div className="flex items-start gap-2">
                 <div className="flex-1 space-y-1">
                   <Label>Pergunta {qi + 1}</Label>
                   <Input value={q.text} onChange={e => updateQuestion(qi, 'text', e.target.value)} placeholder="Texto da pergunta" />
                 </div>
                 {questions.length > 1 && (
-                  <Button type="button" variant="ghost" size="sm" className="text-red-500 mt-5" onClick={() => removeQuestion(qi)}>
+                  <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 mt-5" onClick={() => removeQuestion(qi)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 )}
@@ -245,18 +258,20 @@ function CreateSurveyForm() {
                 <Label htmlFor={`req-${qi}`}>Obrigatória</Label>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-zinc-500">Opções</Label>
+                <Label className="text-xs text-zinc-400 uppercase tracking-wide">Opções</Label>
                 {q.options.map((o, oi) => (
                   <div key={oi} className="flex gap-2">
                     <Input value={o.text} onChange={e => updateOption(qi, oi, e.target.value)} placeholder={`Opção ${oi + 1}`} />
                     {q.options.length > 2 && (
-                      <Button type="button" variant="ghost" size="sm" className="text-red-500" onClick={() => removeOption(qi, oi)}>
+                      <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => removeOption(qi, oi)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => addOption(qi)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => addOption(qi)}
+                  className="text-zinc-400 hover:text-[var(--ink)] hover:bg-amber-50"
+                >
                   <Plus className="w-3 h-3 mr-1" />Adicionar Opção
                 </Button>
               </div>
@@ -266,7 +281,7 @@ function CreateSurveyForm() {
       </Card>
 
       <div className="flex gap-3">
-        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+        <Button type="submit" disabled={loading}>
           {loading ? 'Criando...' : 'Criar Pesquisa'}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push('/surveys')}>

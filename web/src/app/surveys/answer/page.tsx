@@ -116,42 +116,48 @@ function SurveyAnswerContent() {
   )
 
   if (accessState === 'inactive') return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardContent className="py-10 text-center text-zinc-500">
+    <Card className="max-w-md mx-auto mt-12 border-zinc-200">
+      <CardContent className="py-10 text-center text-zinc-400">
         Esta pesquisa não está disponível no momento.
       </CardContent>
     </Card>
   )
 
   if (accessState === 'denied') return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardContent className="py-10 text-center text-zinc-500">
+    <Card className="max-w-md mx-auto mt-12 border-zinc-200">
+      <CardContent className="py-10 text-center text-zinc-400">
         Pesquisa não encontrada.
       </CardContent>
     </Card>
   )
 
   if (accessState === 'done') return (
-    <Card className="max-w-md mx-auto mt-12">
+    <Card className="max-w-md mx-auto mt-12 border-zinc-200">
       <CardContent className="py-10 text-center space-y-4">
-        <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
-        <p className="text-lg font-semibold">Obrigado pela sua resposta!</p>
-        <p className="text-sm text-zinc-500">Sua participação foi registrada com sucesso.</p>
+        <CheckCircle2 className="w-12 h-12 mx-auto" style={{ color: 'var(--amber)' }} />
+        <p className="font-heading text-xl font-semibold" style={{ color: 'var(--ink)' }}>
+          Obrigado pela sua resposta!
+        </p>
+        <p className="text-sm text-zinc-400">Sua participação foi registrada com sucesso.</p>
       </CardContent>
     </Card>
   )
 
   if (accessState === 'email') return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardHeader><CardTitle>Acesso por email</CardTitle></CardHeader>
+    <Card className="max-w-md mx-auto mt-12 border-zinc-200">
+      <CardHeader>
+        <CardTitle className="font-heading text-lg" style={{ color: 'var(--ink)' }}>
+          Acesso por email
+        </CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-zinc-600">Informe seu email para receber o código de acesso.</p>
+        <p className="text-sm text-zinc-500">Informe seu email para receber o código de acesso.</p>
         <div className="space-y-1">
           <Label>Email</Label>
           <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" />
         </div>
         {actionError && <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>}
-        <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={handleRequestCode}>
+        <Button className="w-full" onClick={handleRequestCode}>
           Enviar código
         </Button>
       </CardContent>
@@ -159,17 +165,21 @@ function SurveyAnswerContent() {
   )
 
   if (accessState === 'code') return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardHeader><CardTitle>Verificar código</CardTitle></CardHeader>
+    <Card className="max-w-md mx-auto mt-12 border-zinc-200">
+      <CardHeader>
+        <CardTitle className="font-heading text-lg" style={{ color: 'var(--ink)' }}>
+          Verificar código
+        </CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-zinc-600">Informe o código enviado para <strong>{email}</strong>.</p>
+        <p className="text-sm text-zinc-500">Informe o código enviado para <strong>{email}</strong>.</p>
         <div className="space-y-1">
           <Label>Código</Label>
           <Input value={code} onChange={e => setCode(e.target.value)} placeholder="000000" />
         </div>
         {actionError && <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>}
         <div className="flex gap-2">
-          <Button className="flex-1 bg-indigo-600 hover:bg-indigo-700" onClick={handleVerifyCode}>
+          <Button className="flex-1" onClick={handleVerifyCode}>
             Verificar
           </Button>
           <Button variant="outline" onClick={() => setAccessState('email')}>Voltar</Button>
@@ -183,12 +193,17 @@ function SurveyAnswerContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{survey.title}</h1>
-        {survey.description && <p className="text-zinc-600 mt-1">{survey.description}</p>}
+        <h1
+          className="font-heading text-2xl md:text-3xl font-bold"
+          style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+        >
+          {survey.title}
+        </h1>
+        {survey.description && <p className="text-zinc-500 mt-1">{survey.description}</p>}
       </div>
 
       {preview && (
-        <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+        <Alert className="border-amber-200 bg-amber-50 text-amber-900">
           <AlertDescription className="flex items-center justify-between gap-3">
             <span>Modo pré-visualização — o envio de respostas está desabilitado.</span>
             <LinkButton href="/surveys" variant="outline" size="sm">Sair do preview</LinkButton>
@@ -199,25 +214,28 @@ function SurveyAnswerContent() {
       {actionError && <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>}
 
       {survey.questions.map(q => (
-        <Card key={q.id}>
+        <Card key={q.id} className="border-zinc-200 bg-white">
           <CardHeader>
-            <CardTitle className="text-base">
+            <CardTitle className="text-base font-medium" style={{ color: 'var(--ink)' }}>
               {q.text}
-              {q.isRequired && <span className="text-red-500 ml-1">*</span>}
+              {q.isRequired && <span className="text-red-400 ml-1">*</span>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {q.options.map(o => (
-              <label key={o.id} className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-zinc-50">
+              <label
+                key={o.id}
+                className="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-amber-50 transition-colors group"
+              >
                 <input
                   type="radio"
                   name={`q-${q.id}`}
                   value={o.id}
                   checked={answers[q.id] === o.id}
                   onChange={() => setAnswers(prev => ({ ...prev, [q.id]: o.id }))}
-                  className="accent-indigo-600"
+                  className="accent-amber-500"
                 />
-                <span className="text-sm">{o.text}</span>
+                <span className="text-sm text-zinc-700">{o.text}</span>
               </label>
             ))}
           </CardContent>
@@ -225,7 +243,6 @@ function SurveyAnswerContent() {
       ))}
 
       <Button
-        className="bg-indigo-600 hover:bg-indigo-700"
         onClick={handleSubmit}
         disabled={submitting || preview}
       >

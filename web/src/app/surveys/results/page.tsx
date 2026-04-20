@@ -29,10 +29,10 @@ function exportCsv(result: SurveyResultResponse) {
 }
 
 function barColor(pct: number) {
-  if (pct > 50) return 'bg-green-500'
-  if (pct > 25) return 'bg-blue-500'
-  if (pct > 10) return 'bg-yellow-400'
-  return 'bg-zinc-300'
+  if (pct > 50) return 'var(--amber)'
+  if (pct > 25) return 'var(--indigo)'
+  if (pct > 10) return '#F59E0B80'  // amber at 50%
+  return '#e4e4e7'  // zinc-200
 }
 
 export default function ResultsPage() {
@@ -81,26 +81,44 @@ function ResultsContent() {
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold">{result.surveyTitle}</h1>
-        <p className="text-zinc-500 mt-1">{result.totalResponses} resposta{result.totalResponses !== 1 ? 's' : ''}</p>
+        <h1
+          className="font-heading text-2xl md:text-3xl font-bold"
+          style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+        >
+          {result.surveyTitle}
+        </h1>
+        <p className="text-zinc-400 mt-1">
+          <span
+            className="font-heading text-lg font-semibold"
+            style={{ color: 'var(--ink)' }}
+          >
+            {result.totalResponses}
+          </span>
+          {' '}resposta{result.totalResponses !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {result.questions.map(q => (
-        <Card key={q.questionId}>
+        <Card key={q.questionId} className="border-zinc-200 bg-white">
           <CardHeader>
-            <CardTitle className="text-base">{q.questionText}</CardTitle>
+            <CardTitle className="text-base font-medium" style={{ color: 'var(--ink)' }}>
+              {q.questionText}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {q.options.map(o => (
-              <div key={o.optionId} className="space-y-1">
+              <div key={o.optionId} className="space-y-1.5">
                 <div className="flex justify-between text-sm">
-                  <span>{o.optionText}</span>
-                  <span className="text-zinc-500">{o.count} ({o.percentage.toFixed(1)}%)</span>
+                  <span className="text-zinc-700">{o.optionText}</span>
+                  <span className="text-zinc-400 tabular-nums">{o.count} ({o.percentage.toFixed(1)}%)</span>
                 </div>
-                <div className="w-full bg-zinc-100 rounded-full h-2">
+                <div className="w-full bg-zinc-100 rounded-full h-2.5">
                   <div
-                    className={`h-2 rounded-full transition-all ${barColor(o.percentage)}`}
-                    style={{ width: `${o.percentage}%` }}
+                    className="h-2.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${o.percentage}%`,
+                      background: barColor(o.percentage),
+                    }}
                   />
                 </div>
               </div>
@@ -110,8 +128,8 @@ function ResultsContent() {
       ))}
 
       {result.questions.length === 0 && (
-        <Card>
-          <CardContent className="py-10 text-center text-zinc-500">
+        <Card className="border-zinc-200">
+          <CardContent className="py-10 text-center text-zinc-400">
             Nenhuma resposta registrada ainda.
           </CardContent>
         </Card>

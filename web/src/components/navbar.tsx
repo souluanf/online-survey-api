@@ -15,27 +15,33 @@ export function Navbar() {
   }
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b border-zinc-200 bg-[var(--paper)]">
       <div className="container mx-auto px-4 max-w-4xl flex items-center justify-between h-14">
         <div className="flex items-center gap-6">
-          <Link href="/surveys" className="font-semibold text-indigo-600 text-lg">
+          <Link
+            href="/"
+            className="font-heading text-lg font-semibold text-[var(--ink)] tracking-tight"
+          >
             Online Survey
           </Link>
-          <Link href="/explore" className="text-sm text-zinc-600 hover:text-indigo-600">
-            Explorar
+          <Link
+            href="/surveys"
+            className="text-sm text-zinc-500 hover:text-[var(--ink)] transition-colors"
+          >
+            Minhas pesquisas
           </Link>
         </div>
         {!loading && (
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <span className="text-sm text-zinc-500 hidden sm:block">{user.email}</span>
+                <span className="text-sm text-zinc-400 hidden sm:block">{user.email}</span>
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   Logout
                 </Button>
               </>
             ) : (
-              <LinkButton href="/auth/login" size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+              <LinkButton href="/auth/login" size="sm">
                 Entrar
               </LinkButton>
             )}

@@ -117,14 +117,69 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Ink & Signal design system tokens */
+:root {
+  --ink: #1C1917;
+  --ink-soft: #292524;
+  --amber: #F59E0B;
+  --amber-hover: #D97706;
+  --indigo: #6366F1;
+  --paper: #FAFAF9;
+}
+
+/* Override shadcn primary → amber for all app pages */
+:root {
+  --primary: oklch(0.769 0.188 72.7);       /* amber-500 */
+  --primary-foreground: oklch(0.145 0 0);   /* ink — dark text on amber */
+  --ring: oklch(0.769 0.188 72.7);          /* amber focus ring */
+  --background: oklch(0.985 0.002 60);      /* paper #FAFAF9 */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    color: var(--ink);
   }
   html {
     @apply font-sans;
   }
+}
+
+/* Playfair Display heading utility */
+.font-heading {
+  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
+}
+
+/* App-wide page background */
+body {
+  background-color: var(--paper);
+}
+
+/* Landing scroll reveal */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+}
+
+.reveal.visible {
+  animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Landing float animation */
+@keyframes float {
+  0%, 100% { transform: rotate(-3deg) translateY(0px); }
+  50% { transform: rotate(-3deg) translateY(-10px); }
 }

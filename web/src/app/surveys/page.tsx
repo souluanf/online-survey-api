@@ -25,9 +25,21 @@ function statusLabel(s: string) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'Active') return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Ativa</Badge>
-  if (status === 'Closed') return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Encerrada</Badge>
-  return <Badge variant="secondary">{statusLabel(status)}</Badge>
+  if (status === 'Active') return (
+    <Badge className="bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-100 font-medium">
+      Ativa
+    </Badge>
+  )
+  if (status === 'Closed') return (
+    <Badge className="bg-zinc-100 text-zinc-500 border border-zinc-200 hover:bg-zinc-100">
+      Encerrada
+    </Badge>
+  )
+  return (
+    <Badge variant="secondary" className="text-zinc-500">
+      {statusLabel(status)}
+    </Badge>
+  )
 }
 
 function formatDate(d?: string) {
@@ -155,17 +167,22 @@ function SurveysList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Minhas Pesquisas</h1>
-        <LinkButton href="/surveys/create" className="bg-indigo-600 hover:bg-indigo-700">
+        <h1
+          className="font-heading text-2xl md:text-3xl font-bold"
+          style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+        >
+          Minhas Pesquisas
+        </h1>
+        <LinkButton href="/surveys/create">
           <Plus className="w-4 h-4 mr-1" />Nova Pesquisa
         </LinkButton>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard icon={<FileText className="w-4 h-4" />} label="Total" value={totalCount} />
-        <StatCard icon={<CheckCircle2 className="w-4 h-4 text-green-600" />} label="Ativas" value={counters.active} />
-        <StatCard icon={<Pencil className="w-4 h-4 text-zinc-500" />} label="Rascunho" value={counters.draft} />
-        <StatCard icon={<BarChart2 className="w-4 h-4 text-indigo-600" />} label="Respostas (página)" value={counters.responses} />
+        <StatCard icon={<FileText className="w-4 h-4 text-zinc-400" />} label="Total" value={totalCount} />
+        <StatCard icon={<CheckCircle2 className="w-4 h-4" style={{ color: 'var(--amber)' }} />} label="Ativas" value={counters.active} />
+        <StatCard icon={<Pencil className="w-4 h-4 text-zinc-400" />} label="Rascunho" value={counters.draft} />
+        <StatCard icon={<BarChart2 className="w-4 h-4" style={{ color: 'var(--indigo)' }} />} label="Respostas (página)" value={counters.responses} />
       </div>
 
       <div className="flex flex-col md:flex-row gap-3 mb-4">
@@ -200,24 +217,28 @@ function SurveysList() {
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
       {actionError && <Alert variant="destructive" className="mb-4"><AlertDescription>{actionError}</AlertDescription></Alert>}
-      {actionInfo && <Alert className="mb-4 border-green-300 bg-green-50 text-green-800"><AlertDescription>{actionInfo}</AlertDescription></Alert>}
+      {actionInfo && (
+        <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900">
+          <AlertDescription>{actionInfo}</AlertDescription>
+        </Alert>
+      )}
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i}>
+            <Card key={i} className="border-zinc-200">
               <CardHeader><Skeleton className="h-5 w-48" /></CardHeader>
               <CardContent><Skeleton className="h-4 w-32" /></CardContent>
             </Card>
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-zinc-500">
+        <Card className="border-zinc-200">
+          <CardContent className="py-12 text-center text-zinc-400">
             {surveys.length === 0 ? (
               <>
                 <p className="mb-4">Nenhuma pesquisa criada ainda.</p>
-                <LinkButton href="/surveys/create" className="bg-indigo-600 hover:bg-indigo-700">
+                <LinkButton href="/surveys/create">
                   Criar primeira pesquisa
                 </LinkButton>
               </>
@@ -229,15 +250,23 @@ function SurveysList() {
       ) : (
         <div className="space-y-3">
           {filtered.map(survey => (
-            <Card key={survey.id}>
+            <Card
+              key={survey.id}
+              className="border-zinc-200 bg-white hover:border-amber-200 hover:bg-amber-50/30 transition-colors"
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base font-semibold">{survey.title}</CardTitle>
+                  <CardTitle
+                    className="font-heading text-base font-semibold leading-snug"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    {survey.title}
+                  </CardTitle>
                   <StatusBadge status={survey.status} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-4 text-sm text-zinc-500 mb-4">
+                <div className="flex flex-wrap gap-4 text-sm text-zinc-400 mb-4">
                   <span>{survey.questionCount} perguntas</span>
                   <span>{survey.responseCount} respostas</span>
                   <span>Criada em {formatDate(survey.createdAt)}</span>
@@ -290,7 +319,7 @@ function SurveysList() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
-          <p className="text-sm text-zinc-500">Página {page} de {totalPages}</p>
+          <p className="text-sm text-zinc-400">Página {page} de {totalPages}</p>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
               <ChevronLeft className="w-4 h-4 mr-1" />Anterior
@@ -307,12 +336,17 @@ function SurveysList() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: number }) {
   return (
-    <Card>
+    <Card className="border-zinc-200 bg-white">
       <CardContent className="py-4">
-        <div className="flex items-center gap-2 text-sm text-zinc-500 mb-1">
+        <div className="flex items-center gap-2 text-xs text-zinc-400 mb-1 uppercase tracking-wide font-medium">
           {icon}<span>{label}</span>
         </div>
-        <p className="text-2xl font-bold">{value}</p>
+        <p
+          className="font-heading text-2xl font-bold"
+          style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+        >
+          {value}
+        </p>
       </CardContent>
     </Card>
   )

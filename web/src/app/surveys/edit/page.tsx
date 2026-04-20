@@ -74,7 +74,7 @@ function EditForm() {
       <LinkButton href="/surveys" variant="outline" size="sm">
         <ArrowLeft className="w-4 h-4 mr-1" />Voltar
       </LinkButton>
-      <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+      <Alert className="border-amber-200 bg-amber-50 text-amber-900">
         <AlertDescription>
           Apenas pesquisas em rascunho podem ser editadas. Esta pesquisa está {survey.status === 'Active' ? 'ativa' : 'encerrada'}.
         </AlertDescription>
@@ -88,12 +88,19 @@ function EditForm() {
         <ArrowLeft className="w-4 h-4 mr-1" />Voltar
       </LinkButton>
 
-      <h1 className="text-2xl font-bold">Editar Pesquisa</h1>
+      <h1
+        className="font-heading text-2xl md:text-3xl font-bold"
+        style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+      >
+        Editar Pesquisa
+      </h1>
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Informações</CardTitle></CardHeader>
+      <Card className="border-zinc-200">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-zinc-700">Informações</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Título *</Label>
@@ -103,14 +110,14 @@ function EditForm() {
             <Label>Descrição</Label>
             <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} />
           </div>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-400">
             Perguntas e opções não podem ser editadas após a criação para preservar a integridade das respostas.
           </p>
         </CardContent>
       </Card>
 
       <div className="flex gap-3">
-        <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Salvando...' : 'Salvar'}
         </Button>
         <Button variant="outline" onClick={() => router.push('/surveys')}>Cancelar</Button>

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/lib/auth'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,9 +74,15 @@ export default function LoginPage() {
 
   return (
     <div className="flex justify-center items-center min-h-[60vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-indigo-600">Online Survey</CardTitle>
+      <Card className="w-full max-w-md border-zinc-200 bg-white shadow-sm">
+        <CardHeader className="pb-2 text-center">
+          <p
+            className="font-heading text-2xl font-bold tracking-tight"
+            style={{ color: 'var(--ink)', letterSpacing: '-0.02em' }}
+          >
+            Online Survey
+          </p>
+          <p className="text-sm text-zinc-400 mt-1">Pesquisas que as pessoas realmente querem responder.</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin">
@@ -98,7 +104,7 @@ export default function LoginPage() {
                   {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
                 </div>
                 {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading}>
                   Entrar
                 </Button>
               </form>
@@ -117,7 +123,7 @@ export default function LoginPage() {
                   {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
                 </div>
                 {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading}>
                   Criar conta
                 </Button>
               </form>
