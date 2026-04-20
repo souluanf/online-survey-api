@@ -31,10 +31,10 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public void Surveys_ShouldReturnSurveyRepository()
     {
-        // Act
+        
         var repository = _unitOfWork.Surveys;
 
-        // Assert
+        
         repository.Should().NotBeNull();
         repository.Should().BeOfType<SurveyRepository>();
     }
@@ -42,21 +42,21 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public void Surveys_CalledMultipleTimes_ShouldReturnSameInstance()
     {
-        // Act
+        
         var repository1 = _unitOfWork.Surveys;
         var repository2 = _unitOfWork.Surveys;
 
-        // Assert
+        
         repository1.Should().BeSameAs(repository2);
     }
 
     [Fact]
     public void Responses_ShouldReturnResponseRepository()
     {
-        // Act
+        
         var repository = _unitOfWork.Responses;
 
-        // Assert
+        
         repository.Should().NotBeNull();
         repository.Should().BeOfType<ResponseRepository>();
     }
@@ -64,25 +64,25 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public void Responses_CalledMultipleTimes_ShouldReturnSameInstance()
     {
-        // Act
+        
         var repository1 = _unitOfWork.Responses;
         var repository2 = _unitOfWork.Responses;
 
-        // Assert
+        
         repository1.Should().BeSameAs(repository2);
     }
 
     [Fact]
     public async Task SaveChangesAsync_ShouldPersistChanges()
     {
-        // Arrange
+        
         var survey = new Survey("Test Survey");
         await _unitOfWork.Surveys.AddAsync(survey);
 
-        // Act
+        
         var result = await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         result.Should().BeGreaterThan(0);
         var savedSurvey = await _context.Surveys.FindAsync(survey.Id);
         savedSurvey.Should().NotBeNull();
@@ -91,75 +91,74 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public async Task SaveChangesAsync_WithNoChanges_ShouldReturnZero()
     {
-        // Act
+        
         var result = await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         result.Should().Be(0);
     }
 
     [Fact]
     public async Task CommitAsync_WithoutTransaction_ShouldNotThrow()
     {
-        // Act
+        
         var act = async () => await _unitOfWork.CommitAsync();
 
-        // Assert
+        
         await act.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task RollbackAsync_WithoutTransaction_ShouldNotThrow()
     {
-        // Act
+        
         var act = async () => await _unitOfWork.RollbackAsync();
 
-        // Assert
+        
         await act.Should().NotThrowAsync();
     }
 
     [Fact]
     public void Dispose_ShouldNotThrow()
     {
-        // Arrange
+        
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         var context = new ApplicationDbContext(options);
         var unitOfWork = new UnitOfWork(context);
 
-        // Act
+        
         var act = () => unitOfWork.Dispose();
 
-        // Assert
+        
         act.Should().NotThrow();
     }
 
     [Fact]
     public void Dispose_CalledMultipleTimes_ShouldNotThrow()
     {
-        // Arrange
+        
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         var context = new ApplicationDbContext(options);
         var unitOfWork = new UnitOfWork(context);
 
-        // Act
+        
         var act = () =>
         {
             unitOfWork.Dispose();
             unitOfWork.Dispose();
         };
 
-        // Assert
+        
         act.Should().NotThrow();
     }
 
     [Fact]
     public async Task FullWorkflow_CreateSurveyAndResponse_ShouldWork()
     {
-        // Arrange - Create Survey
         var survey = new Survey("Integration Test Survey");
         var question = new Question(survey.Id, "Test question?", 1);
         question.AddOption(new Option(question.Id, "Option 1", 1));
@@ -177,7 +176,7 @@ public class UnitOfWorkTests : IDisposable
         await _unitOfWork.Responses.AddAsync(response);
         await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         var savedSurvey = await _unitOfWork.Surveys.GetByIdWithQuestionsAndOptionsAsync(survey.Id);
         savedSurvey.Should().NotBeNull();
         savedSurvey!.Questions.Should().HaveCount(1);
@@ -189,47 +188,47 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public async Task SaveChangesAsync_WithMultipleEntities_ShouldReturnCorrectCount()
     {
-        // Arrange
+        
         await _unitOfWork.Surveys.AddAsync(new Survey("Survey 1"));
         await _unitOfWork.Surveys.AddAsync(new Survey("Survey 2"));
         await _unitOfWork.Surveys.AddAsync(new Survey("Survey 3"));
 
-        // Act
+        
         var result = await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         result.Should().Be(3);
     }
 
     [Fact]
     public async Task SaveChangesAsync_WithCancellationToken_ShouldWork()
     {
-        // Arrange
+        
         var survey = new Survey("Test Survey");
         await _unitOfWork.Surveys.AddAsync(survey);
         var cancellationToken = new CancellationToken();
 
-        // Act
+        
         var result = await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Assert
+        
         result.Should().BeGreaterThan(0);
     }
 
     [Fact]
     public async Task Surveys_ShouldAllowChainedOperations()
     {
-        // Arrange
+        
         var survey = new Survey("Test Survey");
 
-        // Act
+        
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
         survey.SetTitle("Updated Title");
         await _unitOfWork.Surveys.UpdateAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         var result = await _unitOfWork.Surveys.GetByIdAsync(survey.Id);
         result!.Title.Should().Be("Updated Title");
     }
@@ -237,7 +236,7 @@ public class UnitOfWorkTests : IDisposable
     [Fact]
     public async Task Responses_ShouldAllowChainedOperations()
     {
-        // Arrange
+        
         var survey = new Survey("Test Survey");
         var question = new Question(survey.Id, "Test?", 1);
         question.AddOption(new Option(question.Id, "Option 1", 1));
@@ -248,14 +247,14 @@ public class UnitOfWorkTests : IDisposable
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         var response1 = new Response(survey.Id, "p1", null);
         var response2 = new Response(survey.Id, "p2", null);
         await _unitOfWork.Responses.AddAsync(response1);
         await _unitOfWork.Responses.AddAsync(response2);
         await _unitOfWork.SaveChangesAsync();
 
-        // Assert
+        
         var count = await _unitOfWork.Responses.GetResponseCountBySurveyIdAsync(survey.Id);
         count.Should().Be(2);
     }
@@ -292,10 +291,9 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task BeginTransactionAsync_ShouldStartTransaction()
     {
-        // Act
+        
         await _unitOfWork.BeginTransactionAsync();
-
-        // Assert - Add data, commit, and verify
+        
         var survey = new Survey("Transaction Test");
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
@@ -308,16 +306,15 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task CommitAsync_WithTransaction_ShouldPersistChanges()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
         var survey = new Survey("Commit Test");
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.CommitAsync();
-
-        // Assert - Create new context to verify persistence
+        
         using var verifyConnection = new SqliteConnection("DataSource=:memory:");
         verifyConnection.Open();
         var result = await _context.Surveys.AsNoTracking().FirstOrDefaultAsync(s => s.Id == survey.Id);
@@ -328,16 +325,16 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task RollbackAsync_WithTransaction_ShouldRevertChanges()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
         var survey = new Survey("Rollback Test");
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.RollbackAsync();
 
-        // Assert
+        
         _context.ChangeTracker.Clear();
         var result = await _context.Surveys.AsNoTracking().FirstOrDefaultAsync(s => s.Id == survey.Id);
         result.Should().BeNull();
@@ -346,17 +343,17 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task BeginTransactionAsync_WithCancellationToken_ShouldWork()
     {
-        // Arrange
+        
         var cancellationToken = new CancellationToken();
         var survey = new Survey("CancellationToken Test");
 
-        // Act
+        
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
         await _unitOfWork.CommitAsync();
 
-        // Assert
+        
         var result = await _context.Surveys.FindAsync(survey.Id);
         result.Should().NotBeNull();
     }
@@ -364,17 +361,17 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task CommitAsync_WithCancellationToken_ShouldWork()
     {
-        // Arrange
+        
         var cancellationToken = new CancellationToken();
         var survey = new Survey("Commit CancellationToken Test");
         await _unitOfWork.BeginTransactionAsync();
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.CommitAsync(cancellationToken);
 
-        // Assert
+        
         var result = await _context.Surveys.AsNoTracking().FirstOrDefaultAsync(s => s.Id == survey.Id);
         result.Should().NotBeNull();
         result!.Title.Should().Be("Commit CancellationToken Test");
@@ -383,17 +380,17 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task RollbackAsync_WithCancellationToken_ShouldWork()
     {
-        // Arrange
+        
         var cancellationToken = new CancellationToken();
         var survey = new Survey("Rollback CancellationToken Test");
         await _unitOfWork.BeginTransactionAsync();
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.RollbackAsync(cancellationToken);
 
-        // Assert
+        
         _context.ChangeTracker.Clear();
         var result = await _context.Surveys.AsNoTracking().FirstOrDefaultAsync(s => s.Id == survey.Id);
         result.Should().BeNull();
@@ -402,35 +399,33 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task CommitAsync_CalledTwice_ShouldNotThrow()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
         await _unitOfWork.CommitAsync();
 
-        // Act - Second commit without transaction
         var act = async () => await _unitOfWork.CommitAsync();
 
-        // Assert
+        
         await act.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task RollbackAsync_CalledTwice_ShouldNotThrow()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
         await _unitOfWork.RollbackAsync();
-
-        // Act - Second rollback without transaction
+        
         var act = async () => await _unitOfWork.RollbackAsync();
 
-        // Assert
+        
         await act.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task FullTransactionWorkflow_CommitSurveyWithQuestions_ShouldPersist()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
 
         var survey = new Survey("Full Workflow Test", "Description");
@@ -442,10 +437,10 @@ public class UnitOfWorkTransactionTests : IDisposable
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.CommitAsync();
 
-        // Assert
+        
         var result = await _unitOfWork.Surveys.GetByIdWithQuestionsAndOptionsAsync(survey.Id);
         result.Should().NotBeNull();
         result!.Questions.Should().HaveCount(1);
@@ -455,7 +450,7 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task FullTransactionWorkflow_RollbackSurveyWithQuestions_ShouldRevert()
     {
-        // Arrange
+        
         await _unitOfWork.BeginTransactionAsync();
 
         var survey = new Survey("Rollback Workflow Test");
@@ -466,10 +461,10 @@ public class UnitOfWorkTransactionTests : IDisposable
         await _unitOfWork.Surveys.AddAsync(survey);
         await _unitOfWork.SaveChangesAsync();
 
-        // Act
+        
         await _unitOfWork.RollbackAsync();
 
-        // Assert
+        
         _context.ChangeTracker.Clear();
         var result = await _context.Surveys.AsNoTracking().FirstOrDefaultAsync(s => s.Id == survey.Id);
         result.Should().BeNull();
@@ -478,7 +473,7 @@ public class UnitOfWorkTransactionTests : IDisposable
     [Fact]
     public async Task Dispose_WithActiveTransaction_ShouldNotThrow()
     {
-        // Arrange
+        
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -490,7 +485,7 @@ public class UnitOfWorkTransactionTests : IDisposable
 
         await unitOfWork.BeginTransactionAsync();
 
-        // Act
+        
         var act = () =>
         {
             unitOfWork.Dispose();
@@ -498,7 +493,7 @@ public class UnitOfWorkTransactionTests : IDisposable
             connection.Dispose();
         };
 
-        // Assert
+        
         act.Should().NotThrow();
     }
 }

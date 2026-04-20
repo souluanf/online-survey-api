@@ -21,43 +21,41 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public void ShouldShowLoadingIndicator_WhenLoading()
     {
-        // Arrange
+        
         _surveyServiceMock
             .Setup(x => x.GetSurveysAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<SurveyStatus?>()))
             .Returns(new TaskCompletionSource<PaginatedResponse<SurveyResponse>?>().Task);
 
-        // Act
+        
         var cut = Render<SurveyList>();
 
-        // Assert — MudBlazor usa MudProgressCircular, não texto "Carregando..."
         cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
     public async Task ShouldRenderPageTitle()
     {
-        // Arrange
+        
         SetupEmptySurveys();
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Pesquisas"));
 
-        // Assert
+        
         cut.Markup.Should().Contain("Pesquisas");
     }
 
     [Fact]
     public async Task ShouldShowCreateButton()
     {
-        // Arrange
+        
         SetupEmptySurveys();
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Nova Pesquisa"));
 
-        // Assert — MudButton com Href="/surveys/create"
         var createLink = cut.Find("a[href='/surveys/create']");
         createLink.Should().NotBeNull();
     }
@@ -65,14 +63,13 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldShowTabs()
     {
-        // Arrange
+        
         SetupEmptySurveys();
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Ativas"));
 
-        // Assert — MudTabs renderiza os textos dos painéis
         cut.Markup.Should().Contain("Ativas");
         cut.Markup.Should().Contain("Rascunhos");
         cut.Markup.Should().Contain("Encerradas");
@@ -81,21 +78,20 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldShowEmptyMessage_WhenNoActiveSurveys()
     {
-        // Arrange
+        
         SetupEmptySurveys();
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Nenhuma pesquisa ativa"));
 
-        // Assert — MudAlert com Severity.Info
         cut.Markup.Should().Contain("Nenhuma pesquisa ativa");
     }
 
     [Fact]
     public async Task ShouldShowActiveSurveys()
     {
-        // Arrange
+        
         var surveys = new List<SurveyResponse>
         {
             CreateSurveyResponse("Active Survey 1", SurveyStatus.Active),
@@ -103,11 +99,10 @@ public class SurveyListTests : MudBunitContext
         };
         SetupSurveys(surveys);
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Active Survey 1"));
 
-        // Assert — MudCard renderiza com classe mud-card
         cut.Markup.Should().Contain("Active Survey 1");
         cut.Markup.Should().Contain("Active Survey 2");
         cut.FindAll(".mud-card").Count.Should().BeGreaterThanOrEqualTo(2);
@@ -116,7 +111,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldSwitchToDraftTab()
     {
-        // Arrange
+        
         var surveys = new List<SurveyResponse>
         {
             CreateSurveyResponse("Draft Survey", SurveyStatus.Draft)
@@ -126,11 +121,10 @@ public class SurveyListTests : MudBunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Act — clicar na aba Rascunhos (segundo mud-tab-panel button)
         var tabs = cut.FindAll(".mud-tab");
         await cut.InvokeAsync(() => tabs[1].Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
         cut.Markup.Should().Contain("Draft Survey");
     }
@@ -138,7 +132,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldSwitchToClosedTab()
     {
-        // Arrange
+        
         var surveys = new List<SurveyResponse>
         {
             CreateSurveyResponse("Closed Survey", SurveyStatus.Closed)
@@ -148,11 +142,10 @@ public class SurveyListTests : MudBunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Encerradas"));
 
-        // Act — clicar na aba Encerradas (terceiro mud-tab)
         var tabs = cut.FindAll(".mud-tab");
         await cut.InvokeAsync(() => tabs[2].Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Closed Survey"));
         cut.Markup.Should().Contain("Closed Survey");
     }
@@ -160,7 +153,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ActivateSurvey_WhenSuccessful_ShouldShowSuccessMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -175,16 +168,14 @@ public class SurveyListTests : MudBunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Rascunhos"));
 
-        // Switch to draft tab
         var tabs = cut.FindAll(".mud-tab");
         await cut.InvokeAsync(() => tabs[1].Click());
         cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act — botão Ativar no card de rascunho
         var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("ativada com sucesso"));
         cut.Markup.Should().Contain("ativada com sucesso");
     }
@@ -192,7 +183,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ActivateSurvey_WhenFailed_ShouldShowErrorMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -211,11 +202,11 @@ public class SurveyListTests : MudBunitContext
         await cut.InvokeAsync(() => tabs[1].Click());
         cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act
+        
         var activateButton = cut.Find("button.mud-button-root.mud-button-filled-success");
         await cut.InvokeAsync(() => activateButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Erro ao ativar"));
         cut.Markup.Should().Contain("Erro ao ativar");
     }
@@ -223,7 +214,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task DeleteSurvey_WhenSuccessful_ShouldShowSuccessMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -242,11 +233,10 @@ public class SurveyListTests : MudBunitContext
         await cut.InvokeAsync(() => tabs[1].Click());
         cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act — botão Excluir (Color.Error, Variant.Outlined)
         var deleteButton = cut.Find("button.mud-button-root.mud-button-outlined-error");
         await cut.InvokeAsync(() => deleteButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("excluída com sucesso"));
         cut.Markup.Should().Contain("excluída com sucesso");
     }
@@ -254,7 +244,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task DeleteSurvey_WhenFailed_ShouldShowErrorMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -273,11 +263,11 @@ public class SurveyListTests : MudBunitContext
         await cut.InvokeAsync(() => tabs[1].Click());
         cut.WaitForState(() => cut.Markup.Contains("Draft Survey"));
 
-        // Act
+        
         var deleteButton = cut.Find("button.mud-button-root.mud-button-outlined-error");
         await cut.InvokeAsync(() => deleteButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Erro ao excluir"));
         cut.Markup.Should().Contain("Erro ao excluir");
     }
@@ -285,7 +275,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task CloseSurvey_WhenSuccessful_ShouldShowSuccessMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -300,11 +290,10 @@ public class SurveyListTests : MudBunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Active Survey"));
 
-        // Act — botão Encerrar (Color.Warning, Variant.Outlined)
         var closeButton = cut.Find("button.mud-button-root.mud-button-outlined-warning");
         await cut.InvokeAsync(() => closeButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("encerrada com sucesso"));
         cut.Markup.Should().Contain("encerrada com sucesso");
     }
@@ -312,7 +301,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task CloseSurvey_WhenFailed_ShouldShowErrorMessage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -327,11 +316,11 @@ public class SurveyListTests : MudBunitContext
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Active Survey"));
 
-        // Act
+        
         var closeButton = cut.Find("button.mud-button-root.mud-button-outlined-warning");
         await cut.InvokeAsync(() => closeButton.Click());
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Erro ao encerrar"));
         cut.Markup.Should().Contain("Erro ao encerrar");
     }
@@ -339,7 +328,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldShowSurveyDetails()
     {
-        // Arrange
+        
         var surveys = new List<SurveyResponse>
         {
             new(Guid.NewGuid(), "Test Survey", "Test Description", SurveyStatus.Active,
@@ -347,11 +336,11 @@ public class SurveyListTests : MudBunitContext
         };
         SetupSurveys(surveys);
 
-        // Act
+        
         var cut = Render<SurveyList>();
         cut.WaitForState(() => cut.Markup.Contains("Test Survey"));
 
-        // Assert
+        
         cut.Markup.Should().Contain("Test Survey");
         cut.Markup.Should().Contain("Test Description");
         cut.Markup.Should().Contain("5 perguntas");
@@ -361,7 +350,7 @@ public class SurveyListTests : MudBunitContext
     [Fact]
     public async Task ShouldDismissMessage_WhenCloseIconClicked()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var surveys = new List<SurveyResponse>
         {
@@ -383,11 +372,10 @@ public class SurveyListTests : MudBunitContext
         await cut.InvokeAsync(() => cut.Find("button.mud-button-root.mud-button-outlined-error").Click());
         cut.WaitForState(() => cut.Markup.Contains("excluída com sucesso"));
 
-        // Act — MudAlert com ShowCloseIcon tem botão de fechar
         var closeButton = cut.Find("button.mud-alert-close-button");
         await cut.InvokeAsync(() => closeButton.Click());
 
-        // Assert
+        
         cut.Markup.Should().NotContain("excluída com sucesso");
     }
 

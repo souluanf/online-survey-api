@@ -31,7 +31,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task CreateSurveyAsync_WithValidRequest_ShouldReturnSurveyDetail()
     {
-        // Arrange
+        
         var request = new CreateSurveyRequest(
             "Election Poll 2024",
             "Public opinion poll",
@@ -48,10 +48,10 @@ public class SurveyServiceTests
             ]
         );
 
-        // Act
+        
         var result = await _service.CreateSurveyAsync(request);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result.Title.Should().Be(request.Title);
         result.Description.Should().Be(request.Description);
@@ -66,7 +66,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task GetSurveyByIdAsync_WhenSurveyExists_ShouldReturnSurveyDetail()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -78,10 +78,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetResponseCountBySurveyIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(100);
 
-        // Act
+        
         var result = await _service.GetSurveyByIdAsync(surveyId);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Id.Should().Be(surveyId);
         result.Title.Should().Be(survey.Title);
@@ -90,23 +90,23 @@ public class SurveyServiceTests
     [Fact]
     public async Task GetSurveyByIdAsync_WhenSurveyDoesNotExist_ShouldReturnNull()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         _surveyRepositoryMock
             .Setup(r => r.GetByIdWithQuestionsAndOptionsAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Survey?)null);
 
-        // Act
+        
         var result = await _service.GetSurveyByIdAsync(surveyId);
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task ActivateSurveyAsync_WhenSurveyIsDraft_ShouldActivate()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -116,10 +116,10 @@ public class SurveyServiceTests
 
         var request = new ActivateSurveyRequest(null, null);
 
-        // Act
+        
         var result = await _service.ActivateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Status.Should().Be(SurveyStatus.Active);
         _surveyRepositoryMock.Verify(r => r.UpdateAsync(survey, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -127,16 +127,16 @@ public class SurveyServiceTests
     [Fact]
     public async Task DeleteSurveyAsync_WhenSurveyDoesNotExist_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         _surveyRepositoryMock
             .Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Survey?)null);
 
-        // Act
+        
         var act = () => _service.DeleteSurveyAsync(surveyId);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Survey not found.");
     }
@@ -144,7 +144,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task GetSurveysAsync_ShouldReturnPaginatedResults()
     {
-        // Arrange
+        
         var surveys = new List<Survey>
         {
             CreateTestSurvey(Guid.NewGuid()),
@@ -159,10 +159,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetResponseCountBySurveyIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(5);
 
-        // Act
+        
         var result = await _service.GetSurveysAsync(1, 10);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result.Items.Should().HaveCount(2);
         result.TotalCount.Should().Be(2);
@@ -173,7 +173,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task GetActiveSurveysAsync_ShouldReturnOnlyActiveSurveys()
     {
-        // Arrange
+        
         var activeSurvey = CreateActiveSurvey(Guid.NewGuid());
         var surveys = new List<Survey> { activeSurvey };
 
@@ -185,10 +185,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetResponseCountBySurveyIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(10);
 
-        // Act
+        
         var result = await _service.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().HaveCount(1);
         result.First().Status.Should().Be(SurveyStatus.Active);
     }
@@ -196,7 +196,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task UpdateSurveyAsync_WhenSurveyIsDraft_ShouldUpdateSuccessfully()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -206,10 +206,10 @@ public class SurveyServiceTests
 
         var request = new UpdateSurveyRequest("Updated Title", "Updated Description");
 
-        // Act
+        
         var result = await _service.UpdateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Title.Should().Be("Updated Title");
         result.Description.Should().Be("Updated Description");
         _surveyRepositoryMock.Verify(r => r.UpdateAsync(survey, It.IsAny<CancellationToken>()), Times.Once);
@@ -218,7 +218,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task UpdateSurveyAsync_WhenSurveyIsActive_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateActiveSurvey(surveyId);
 
@@ -228,10 +228,10 @@ public class SurveyServiceTests
 
         var request = new UpdateSurveyRequest("Updated Title", "Updated Description");
 
-        // Act
+        
         var act = () => _service.UpdateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Only draft surveys can be updated.");
     }
@@ -239,7 +239,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task UpdateSurveyAsync_WhenSurveyNotFound_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         _surveyRepositoryMock
             .Setup(r => r.GetByIdWithQuestionsAndOptionsAsync(surveyId, It.IsAny<CancellationToken>()))
@@ -247,10 +247,10 @@ public class SurveyServiceTests
 
         var request = new UpdateSurveyRequest("Updated Title", null);
 
-        // Act
+        
         var act = () => _service.UpdateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Survey not found.");
     }
@@ -258,7 +258,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task ActivateSurveyAsync_WhenSurveyNotFound_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         _surveyRepositoryMock
             .Setup(r => r.GetByIdWithQuestionsAndOptionsAsync(surveyId, It.IsAny<CancellationToken>()))
@@ -266,10 +266,10 @@ public class SurveyServiceTests
 
         var request = new ActivateSurveyRequest(null, null);
 
-        // Act
+        
         var act = () => _service.ActivateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Survey not found.");
     }
@@ -277,7 +277,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task CloseSurveyAsync_WhenSurveyIsActive_ShouldCloseSuccessfully()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateActiveSurvey(surveyId);
 
@@ -285,10 +285,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetByIdWithQuestionsAndOptionsAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
 
-        // Act
+        
         var result = await _service.CloseSurveyAsync(surveyId);
 
-        // Assert
+        
         result.Status.Should().Be(SurveyStatus.Closed);
         _surveyRepositoryMock.Verify(r => r.UpdateAsync(survey, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -296,16 +296,16 @@ public class SurveyServiceTests
     [Fact]
     public async Task CloseSurveyAsync_WhenSurveyNotFound_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         _surveyRepositoryMock
             .Setup(r => r.GetByIdWithQuestionsAndOptionsAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Survey?)null);
 
-        // Act
+        
         var act = () => _service.CloseSurveyAsync(surveyId);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Survey not found.");
     }
@@ -313,7 +313,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task DeleteSurveyAsync_WhenSurveyIsDraft_ShouldDeleteSuccessfully()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -321,10 +321,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
 
-        // Act
+        
         await _service.DeleteSurveyAsync(surveyId);
 
-        // Assert
+        
         _surveyRepositoryMock.Verify(r => r.DeleteAsync(survey, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -332,7 +332,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task DeleteSurveyAsync_WhenSurveyIsActive_ShouldThrowDomainException()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateActiveSurvey(surveyId);
 
@@ -340,10 +340,10 @@ public class SurveyServiceTests
             .Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
 
-        // Act
+        
         var act = () => _service.DeleteSurveyAsync(surveyId);
 
-        // Assert
+        
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Cannot delete an active survey. Close it first.");
     }
@@ -351,7 +351,7 @@ public class SurveyServiceTests
     [Fact]
     public async Task ActivateSurveyAsync_WithCustomDates_ShouldSetDates()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -363,10 +363,10 @@ public class SurveyServiceTests
         var endDate = DateTime.UtcNow.AddDays(30);
         var request = new ActivateSurveyRequest(startDate, endDate);
 
-        // Act
+        
         var result = await _service.ActivateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Status.Should().Be(SurveyStatus.Active);
         result.StartDate.Should().Be(startDate);
         result.EndDate.Should().Be(endDate);

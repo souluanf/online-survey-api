@@ -12,26 +12,26 @@ public class CreateSurveyValidatorTests
     [Fact]
     public void Validate_WithValidRequest_ShouldPass()
     {
-        // Arrange
+        
         var request = CreateValidRequest();
 
-        // Act
+        
         var result = _validator.TestValidate(request);
 
-        // Assert
+        
         result.ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact]
     public void Validate_WithEmptyTitle_ShouldFail()
     {
-        // Arrange
+        
         var request = CreateValidRequest() with { Title = "" };
 
-        // Act
+        
         var result = _validator.TestValidate(request);
 
-        // Assert
+        
         result.ShouldHaveValidationErrorFor(x => x.Title)
             .WithErrorMessage("Title is required.");
     }
@@ -39,13 +39,13 @@ public class CreateSurveyValidatorTests
     [Fact]
     public void Validate_WithTitleTooLong_ShouldFail()
     {
-        // Arrange
+        
         var request = CreateValidRequest() with { Title = new string('a', 201) };
 
-        // Act
+        
         var result = _validator.TestValidate(request);
 
-        // Assert
+        
         result.ShouldHaveValidationErrorFor(x => x.Title)
             .WithErrorMessage("Title cannot exceed 200 characters.");
     }
@@ -53,13 +53,13 @@ public class CreateSurveyValidatorTests
     [Fact]
     public void Validate_WithNoQuestions_ShouldFail()
     {
-        // Arrange
+        
         var request = CreateValidRequest() with { Questions = [] };
 
-        // Act
+        
         var result = _validator.TestValidate(request);
 
-        // Assert
+        
         result.ShouldHaveValidationErrorFor(x => x.Questions)
             .WithErrorMessage("At least one question is required.");
     }
@@ -67,7 +67,7 @@ public class CreateSurveyValidatorTests
     [Fact]
     public void Validate_WithQuestionWithOneOption_ShouldFail()
     {
-        // Arrange
+        
         var request = new CreateSurveyRequest(
             "Test Survey",
             null,
@@ -81,10 +81,10 @@ public class CreateSurveyValidatorTests
             ]
         );
 
-        // Act
+        
         var result = _validator.TestValidate(request);
 
-        // Assert
+        
         result.ShouldHaveAnyValidationError()
             .WithErrorMessage("At least 2 options are required.");
     }

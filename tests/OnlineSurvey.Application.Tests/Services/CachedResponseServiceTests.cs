@@ -34,7 +34,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task GetSurveyResultsAsync_WhenCached_ShouldReturnCachedResult()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var cachedResult = new SurveyResultResponse(surveyId, "Test Survey", 10, []);
 
@@ -43,10 +43,10 @@ public class CachedResponseServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(cachedResult);
 
-        // Act
+        
         var result = await _cachedService.GetSurveyResultsAsync(surveyId);
 
-        // Assert
+        
         result.Should().Be(cachedResult);
         _surveyRepositoryMock.Verify(r => r.GetByIdWithQuestionsAndOptionsAsync(
             It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -55,7 +55,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task GetSurveyResultsAsync_WhenNotCached_ShouldFetchAndCache()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
 
@@ -75,10 +75,10 @@ public class CachedResponseServiceTests
                 surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, int>());
 
-        // Act
+        
         var result = await _cachedService.GetSurveyResultsAsync(surveyId);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result.SurveyId.Should().Be(surveyId);
         _cacheMock.Verify(c => c.SetAsync(
@@ -91,7 +91,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task GetResponseCountAsync_WhenCached_ShouldReturnCachedResult()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var cachedCount = 42;
 
@@ -100,10 +100,10 @@ public class CachedResponseServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(cachedCount);
 
-        // Act
+        
         var result = await _cachedService.GetResponseCountAsync(surveyId);
 
-        // Assert
+        
         result.Should().Be(cachedCount);
         _responseRepositoryMock.Verify(r => r.GetResponseCountBySurveyIdAsync(
             It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -112,7 +112,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task GetResponseCountAsync_WhenNotCached_ShouldFetchAndCache()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var count = 15;
 
@@ -124,10 +124,10 @@ public class CachedResponseServiceTests
                 surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(count);
 
-        // Act
+        
         var result = await _cachedService.GetResponseCountAsync(surveyId);
 
-        // Assert
+        
         result.Should().Be(count);
         _cacheMock.Verify(c => c.SetAsync(
             It.Is<string>(k => k.Contains(surveyId.ToString())),
@@ -139,7 +139,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task SubmitResponseAsync_ShouldInvalidateCache()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
         ActivateSurvey(survey);
@@ -164,10 +164,10 @@ public class CachedResponseServiceTests
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
+        
         await _cachedService.SubmitResponseAsync(request);
 
-        // Assert
+        
         _cacheMock.Verify(c => c.RemoveAsync(
             It.Is<string>(k => k.Contains("survey_results_") && k.Contains(surveyId.ToString())),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -179,7 +179,7 @@ public class CachedResponseServiceTests
     [Fact]
     public async Task SubmitResponseAsync_ShouldReturnResponseId()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateTestSurvey(surveyId);
         ActivateSurvey(survey);
@@ -200,10 +200,10 @@ public class CachedResponseServiceTests
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
+        
         var result = await _cachedService.SubmitResponseAsync(request);
 
-        // Assert
+        
         result.Should().NotBe(Guid.Empty);
     }
 

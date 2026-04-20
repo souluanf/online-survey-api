@@ -23,7 +23,7 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenNoException_ShouldCallNext()
     {
-        // Arrange
+        
         var context = new DefaultHttpContext();
         var nextCalled = false;
         RequestDelegate next = _ =>
@@ -34,27 +34,27 @@ public class ExceptionHandlingMiddlewareTests
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         nextCalled.Should().BeTrue();
     }
 
     [Fact]
     public async Task InvokeAsync_WhenDomainException_ShouldReturn400()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         var exceptionMessage = "Domain validation failed";
         RequestDelegate next = _ => throw new DomainException(exceptionMessage);
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -66,17 +66,17 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenArgumentException_ShouldReturn400()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         var exceptionMessage = "Invalid argument";
         RequestDelegate next = _ => throw new ArgumentException(exceptionMessage);
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
 
         var responseBody = await GetResponseBody(context);
@@ -86,16 +86,16 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenKeyNotFoundException_ShouldReturn404()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         RequestDelegate next = _ => throw new KeyNotFoundException("Resource not found");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
 
         var responseBody = await GetResponseBody(context);
@@ -106,16 +106,16 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenUnhandledException_ShouldReturn500()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         RequestDelegate next = _ => throw new InvalidOperationException("Something went wrong");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
 
         var responseBody = await GetResponseBody(context);
@@ -126,17 +126,17 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenUnhandledException_ShouldLogError()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         var exception = new InvalidOperationException("Critical error");
         RequestDelegate next = _ => throw exception;
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Error,
@@ -150,17 +150,17 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_WhenDomainException_ShouldLogWarning()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         _loggerMock.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
         RequestDelegate next = _ => throw new DomainException("Validation error");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Warning,
@@ -174,17 +174,17 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ResponseBody_ShouldContainTraceId()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         context.TraceIdentifier = "test-trace-123";
         RequestDelegate next = _ => throw new DomainException("Test error");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain("test-trace-123");
     }
@@ -192,16 +192,16 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ResponseBody_ShouldContainProblemType()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         RequestDelegate next = _ => throw new DomainException("Test error");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain("https://tools.ietf.org/html/rfc7231");
     }
@@ -209,16 +209,16 @@ public class ExceptionHandlingMiddlewareTests
     [Fact]
     public async Task InvokeAsync_ResponseBody_ShouldBeCamelCase()
     {
-        // Arrange
+        
         var context = CreateHttpContext();
         RequestDelegate next = _ => throw new DomainException("Test error");
 
         var middleware = new ExceptionHandlingMiddleware(next, _loggerMock.Object);
 
-        // Act
+        
         await middleware.InvokeAsync(context);
 
-        // Assert
+        
         var responseBody = await GetResponseBody(context);
         responseBody.Should().Contain("\"traceId\"");
         responseBody.Should().Contain("\"status\"");

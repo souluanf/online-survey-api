@@ -28,7 +28,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetActiveSurveysAsync_ShouldReturnSurveys()
     {
-        // Arrange
+        
         var surveys = new List<SurveyResponse>
         {
             CreateSurveyResponse("Survey 1"),
@@ -38,38 +38,38 @@ public class SurveyApiServiceTests
         _mockHttp.When("http://localhost/api/surveys/active")
             .Respond("application/json", JsonSerializer.Serialize(surveys, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task GetActiveSurveysAsync_WhenEmpty_ShouldReturnEmptyList()
     {
-        // Arrange
+        
         _mockHttp.When("http://localhost/api/surveys/active")
             .Respond("application/json", "[]");
 
-        // Act
+        
         var result = await _service.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().BeEmpty();
     }
 
     [Fact]
     public async Task GetActiveSurveysAsync_WhenNullResponse_ShouldReturnEmptyList()
     {
-        // Arrange
+        
         _mockHttp.When("http://localhost/api/surveys/active")
             .Respond("application/json", "null");
 
-        // Act
+        
         var result = await _service.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().BeEmpty();
     }
 
@@ -80,7 +80,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetSurveysAsync_ShouldReturnPaginatedResponse()
     {
-        // Arrange
+        
         var paginatedResponse = new PaginatedResponse<SurveyResponse>(
             Items: [CreateSurveyResponse("Survey 1")],
             Page: 1,
@@ -92,10 +92,10 @@ public class SurveyApiServiceTests
         _mockHttp.When("http://localhost/api/surveys?page=1&pageSize=50")
             .Respond("application/json", JsonSerializer.Serialize(paginatedResponse, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetSurveysAsync();
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Items.Should().HaveCount(1);
         result.TotalCount.Should().Be(1);
@@ -104,7 +104,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetSurveysAsync_WithStatusFilter_ShouldIncludeStatusInUrl()
     {
-        // Arrange
+        
         var paginatedResponse = new PaginatedResponse<SurveyResponse>(
             Items: [],
             Page: 1,
@@ -116,17 +116,17 @@ public class SurveyApiServiceTests
         _mockHttp.When("http://localhost/api/surveys?page=1&pageSize=10&status=1")
             .Respond("application/json", JsonSerializer.Serialize(paginatedResponse, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetSurveysAsync(page: 1, pageSize: 10, status: SurveyStatus.Active);
 
-        // Assert
+        
         result.Should().NotBeNull();
     }
 
     [Fact]
     public async Task GetSurveysAsync_WithCustomPagination_ShouldUseCorrectParameters()
     {
-        // Arrange
+        
         var paginatedResponse = new PaginatedResponse<SurveyResponse>(
             Items: [],
             Page: 2,
@@ -138,10 +138,10 @@ public class SurveyApiServiceTests
         _mockHttp.When("http://localhost/api/surveys?page=2&pageSize=25")
             .Respond("application/json", JsonSerializer.Serialize(paginatedResponse, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetSurveysAsync(page: 2, pageSize: 25);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Page.Should().Be(2);
         result.PageSize.Should().Be(25);
@@ -154,17 +154,17 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetSurveyByIdAsync_WhenExists_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var survey = CreateSurveyDetailResponse(surveyId, "Test Survey");
 
         _mockHttp.When($"http://localhost/api/surveys/{surveyId}")
             .Respond("application/json", JsonSerializer.Serialize(survey, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetSurveyByIdAsync(surveyId);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Id.Should().Be(surveyId);
         result.Title.Should().Be("Test Survey");
@@ -173,13 +173,13 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetSurveyByIdAsync_WhenNotExists_ShouldReturnNull()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
 
         _mockHttp.When($"http://localhost/api/surveys/{surveyId}")
             .Respond(HttpStatusCode.NotFound);
 
-        // Act & Assert
+         
         await Assert.ThrowsAsync<HttpRequestException>(() => _service.GetSurveyByIdAsync(surveyId));
     }
 
@@ -190,7 +190,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task GetSurveyResultsAsync_ShouldReturnResults()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -211,10 +211,10 @@ public class SurveyApiServiceTests
         _mockHttp.When($"http://localhost/api/responses/surveys/{surveyId}/results")
             .Respond("application/json", JsonSerializer.Serialize(results, _jsonOptions));
 
-        // Act
+        
         var result = await _service.GetSurveyResultsAsync(surveyId);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.TotalResponses.Should().Be(10);
         result.Questions.Should().HaveCount(1);
@@ -227,7 +227,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task SubmitResponseAsync_WhenSuccessful_ShouldReturnTrue()
     {
-        // Arrange
+        
         var request = new SubmitResponseRequest(
             SurveyId: Guid.NewGuid(),
             ParticipantId: "participant1",
@@ -237,17 +237,17 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Post, "http://localhost/api/responses")
             .Respond(HttpStatusCode.Created);
 
-        // Act
+        
         var result = await _service.SubmitResponseAsync(request);
 
-        // Assert
+        
         result.Should().BeTrue();
     }
 
     [Fact]
     public async Task SubmitResponseAsync_WhenFailed_ShouldReturnFalse()
     {
-        // Arrange
+        
         var request = new SubmitResponseRequest(
             SurveyId: Guid.NewGuid(),
             ParticipantId: null,
@@ -257,10 +257,10 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Post, "http://localhost/api/responses")
             .Respond(HttpStatusCode.BadRequest);
 
-        // Act
+        
         var result = await _service.SubmitResponseAsync(request);
 
-        // Assert
+        
         result.Should().BeFalse();
     }
 
@@ -271,7 +271,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task CreateSurveyAsync_WhenSuccessful_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var request = new CreateSurveyRequest(
             Title: "New Survey",
             Description: "Description",
@@ -293,10 +293,10 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Post, "http://localhost/api/surveys")
             .Respond("application/json", JsonSerializer.Serialize(responseData, _jsonOptions));
 
-        // Act
+        
         var result = await _service.CreateSurveyAsync(request);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Title.Should().Be("New Survey");
     }
@@ -304,7 +304,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task CreateSurveyAsync_WhenFailed_ShouldReturnNull()
     {
-        // Arrange
+        
         var request = new CreateSurveyRequest(
             Title: "",
             Description: null,
@@ -314,10 +314,10 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Post, "http://localhost/api/surveys")
             .Respond(HttpStatusCode.BadRequest);
 
-        // Act
+        
         var result = await _service.CreateSurveyAsync(request);
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
@@ -328,7 +328,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task ActivateSurveyAsync_WhenSuccessful_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var request = new ActivateSurveyRequest(
             StartDate: DateTime.UtcNow,
@@ -340,27 +340,27 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Post, $"http://localhost/api/surveys/{surveyId}/activate")
             .Respond("application/json", JsonSerializer.Serialize(responseData, _jsonOptions));
 
-        // Act
+        
         var result = await _service.ActivateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Should().NotBeNull();
     }
 
     [Fact]
     public async Task ActivateSurveyAsync_WhenFailed_ShouldReturnNull()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var request = new ActivateSurveyRequest(null, null);
 
         _mockHttp.When(HttpMethod.Post, $"http://localhost/api/surveys/{surveyId}/activate")
             .Respond(HttpStatusCode.BadRequest);
 
-        // Act
+        
         var result = await _service.ActivateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
@@ -371,32 +371,32 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task DeleteSurveyAsync_WhenSuccessful_ShouldReturnTrue()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
 
         _mockHttp.When(HttpMethod.Delete, $"http://localhost/api/surveys/{surveyId}")
             .Respond(HttpStatusCode.NoContent);
 
-        // Act
+        
         var result = await _service.DeleteSurveyAsync(surveyId);
 
-        // Assert
+        
         result.Should().BeTrue();
     }
 
     [Fact]
     public async Task DeleteSurveyAsync_WhenNotFound_ShouldReturnFalse()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
 
         _mockHttp.When(HttpMethod.Delete, $"http://localhost/api/surveys/{surveyId}")
             .Respond(HttpStatusCode.NotFound);
 
-        // Act
+        
         var result = await _service.DeleteSurveyAsync(surveyId);
 
-        // Assert
+        
         result.Should().BeFalse();
     }
 
@@ -407,7 +407,7 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task UpdateSurveyAsync_WhenSuccessful_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var request = new UpdateSurveyRequest(
             Title: "Updated Title",
@@ -419,10 +419,10 @@ public class SurveyApiServiceTests
         _mockHttp.When(HttpMethod.Put, $"http://localhost/api/surveys/{surveyId}")
             .Respond("application/json", JsonSerializer.Serialize(responseData, _jsonOptions));
 
-        // Act
+        
         var result = await _service.UpdateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Title.Should().Be("Updated Title");
     }
@@ -430,17 +430,17 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task UpdateSurveyAsync_WhenFailed_ShouldReturnNull()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var request = new UpdateSurveyRequest("", null);
 
         _mockHttp.When(HttpMethod.Put, $"http://localhost/api/surveys/{surveyId}")
             .Respond(HttpStatusCode.BadRequest);
 
-        // Act
+        
         var result = await _service.UpdateSurveyAsync(surveyId, request);
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
@@ -451,33 +451,33 @@ public class SurveyApiServiceTests
     [Fact]
     public async Task CloseSurveyAsync_WhenSuccessful_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var responseData = CreateSurveyDetailResponse(surveyId, "Closed Survey");
 
         _mockHttp.When(HttpMethod.Post, $"http://localhost/api/surveys/{surveyId}/close")
             .Respond("application/json", JsonSerializer.Serialize(responseData, _jsonOptions));
 
-        // Act
+        
         var result = await _service.CloseSurveyAsync(surveyId);
 
-        // Assert
+        
         result.Should().NotBeNull();
     }
 
     [Fact]
     public async Task CloseSurveyAsync_WhenFailed_ShouldReturnNull()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
 
         _mockHttp.When(HttpMethod.Post, $"http://localhost/api/surveys/{surveyId}/close")
             .Respond(HttpStatusCode.BadRequest);
 
-        // Act
+        
         var result = await _service.CloseSurveyAsync(surveyId);
 
-        // Assert
+        
         result.Should().BeNull();
     }
 

@@ -21,32 +21,32 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public void ShouldShowProgressCircular_WhenLoading()
     {
-        // Arrange
+        
         _surveyServiceMock
             .Setup(x => x.GetSurveyResultsAsync(It.IsAny<Guid>()))
             .Returns(new TaskCompletionSource<SurveyResultResponse?>().Task);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, Guid.NewGuid()));
 
-        // Assert
+        
         cut.FindAll(".mud-progress-circular").Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
     public async Task ShouldShowNotFoundMessage_WhenResultsIsNull()
     {
-        // Arrange
+        
         _surveyServiceMock
             .Setup(x => x.GetSurveyResultsAsync(It.IsAny<Guid>()))
             .ReturnsAsync((SurveyResultResponse?)null);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, Guid.NewGuid()));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("não encontrados"));
         cut.Markup.Should().Contain("Resultados não encontrados");
     }
@@ -54,7 +54,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderSurveyTitle()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Customer Satisfaction Survey");
 
@@ -62,11 +62,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Customer Satisfaction Survey"));
         cut.Markup.Should().Contain("Customer Satisfaction Survey");
     }
@@ -74,7 +74,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderTotalResponses()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Survey", totalResponses: 42);
 
@@ -82,11 +82,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("42"));
         cut.Markup.Should().Contain("Total de respostas");
         cut.Markup.Should().Contain("42");
@@ -95,7 +95,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderQuestions()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Survey");
 
@@ -103,11 +103,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Sample Question"));
         cut.Markup.Should().Contain("Sample Question");
     }
@@ -115,7 +115,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderOptions_WithCountsAndPercentages()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Survey");
 
@@ -123,11 +123,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Option A"));
         cut.Markup.Should().Contain("Option A");
         cut.Markup.Should().Contain("Option B");
@@ -137,7 +137,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderProgressBars()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Survey");
 
@@ -145,11 +145,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
         var progressBars = cut.FindAll(".mud-progress-linear");
         progressBars.Count.Should().BeGreaterThanOrEqualTo(2);
@@ -158,7 +158,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldApplyCorrectProgressBarColor_ForHighPercentage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -179,11 +179,10 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert - MudProgressLinear with Color.Success renders mud-progress-linear-color-success class
         cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
         cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-success");
     }
@@ -191,7 +190,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldApplyCorrectProgressBarColor_ForMediumPercentage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -212,11 +211,10 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert - MudProgressLinear with Color.Info renders mud-progress-linear-color-info class
         cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
         cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-info");
     }
@@ -224,7 +222,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldApplyCorrectProgressBarColor_ForLowPercentage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -245,11 +243,10 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert - MudProgressLinear with Color.Warning renders mud-progress-linear-color-warning class
         cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
         cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-warning");
     }
@@ -257,7 +254,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldApplyCorrectProgressBarColor_ForVeryLowPercentage()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -278,11 +275,10 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert - MudProgressLinear with Color.Default renders mud-progress-linear-color-default class
         cut.WaitForState(() => cut.Markup.Contains("mud-progress-linear"));
         cut.Find(".mud-progress-linear").ClassList.Should().Contain("mud-progress-linear-color-default");
     }
@@ -290,7 +286,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderBackToSurveysLink()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = CreateSurveyResultResponse(surveyId, "Survey");
 
@@ -298,11 +294,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Voltar"));
         cut.Markup.Should().Contain("Voltar às Pesquisas");
         // MudButton with Href renders as anchor
@@ -313,7 +309,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldRenderMultipleQuestions()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -343,11 +339,11 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert
+        
         cut.WaitForState(() => cut.Markup.Contains("Question 1"));
         cut.Markup.Should().Contain("Question 1");
         cut.Markup.Should().Contain("Question 2");
@@ -358,7 +354,7 @@ public class SurveyResultsTests : MudBunitContext
     [Fact]
     public async Task ShouldFormatPercentage_WithOneDecimalPlace()
     {
-        // Arrange
+        
         var surveyId = Guid.NewGuid();
         var results = new SurveyResultResponse(
             SurveyId: surveyId,
@@ -379,12 +375,10 @@ public class SurveyResultsTests : MudBunitContext
             .Setup(x => x.GetSurveyResultsAsync(surveyId))
             .ReturnsAsync(results);
 
-        // Act
+        
         var cut = Render<SurveyResults>(parameters =>
             parameters.Add(p => p.SurveyId, surveyId));
 
-        // Assert — razor usa F1 (1 casa decimal): "33.3%"
-        // O componente já renderizou (task completou imediatamente), não há segundo render
         cut.Markup.Should().Contain("33.3%");
     }
 

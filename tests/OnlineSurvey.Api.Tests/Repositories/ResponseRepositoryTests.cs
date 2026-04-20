@@ -32,15 +32,15 @@ public class ResponseRepositoryTests : IDisposable
     [Fact]
     public async Task AddAsync_ShouldAddResponse()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         var response = new Response(survey.Id, "participant1", "192.168.1.1");
 
-        // Act
+        
         await _repository.AddAsync(response);
         await _context.SaveChangesAsync();
 
-        // Assert
+        
         var result = await _context.Responses.FindAsync(response.Id);
         result.Should().NotBeNull();
         result!.ParticipantId.Should().Be("participant1");
@@ -49,7 +49,7 @@ public class ResponseRepositoryTests : IDisposable
     [Fact]
     public async Task GetBySurveyIdAsync_ShouldReturnResponsesForSurvey()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         var response1 = new Response(survey.Id, "participant1", null);
         var response2 = new Response(survey.Id, "participant2", null);
@@ -58,76 +58,76 @@ public class ResponseRepositoryTests : IDisposable
         await _repository.AddAsync(response2);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetBySurveyIdAsync(survey.Id);
 
-        // Assert
+        
         result.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task GetResponseCountBySurveyIdAsync_ShouldReturnCorrectCount()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         await _repository.AddAsync(new Response(survey.Id, "p1", null));
         await _repository.AddAsync(new Response(survey.Id, "p2", null));
         await _repository.AddAsync(new Response(survey.Id, "p3", null));
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var count = await _repository.GetResponseCountBySurveyIdAsync(survey.Id);
 
-        // Assert
+        
         count.Should().Be(3);
     }
 
     [Fact]
     public async Task GetResponseCountBySurveyIdAsync_WhenNoResponses_ShouldReturnZero()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
 
-        // Act
+        
         var count = await _repository.GetResponseCountBySurveyIdAsync(survey.Id);
 
-        // Assert
+        
         count.Should().Be(0);
     }
 
     [Fact]
     public async Task HasRespondedAsync_WhenParticipantHasResponded_ShouldReturnTrue()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         var response = new Response(survey.Id, "participant123", null);
         await _repository.AddAsync(response);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var hasResponded = await _repository.HasRespondedAsync(survey.Id, "participant123");
 
-        // Assert
+        
         hasResponded.Should().BeTrue();
     }
 
     [Fact]
     public async Task HasRespondedAsync_WhenParticipantHasNotResponded_ShouldReturnFalse()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
 
-        // Act
+        
         var hasResponded = await _repository.HasRespondedAsync(survey.Id, "participant123");
 
-        // Assert
+        
         hasResponded.Should().BeFalse();
     }
 
     [Fact]
     public async Task GetOptionCountsAsync_ShouldReturnCorrectCounts()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         var question = survey.Questions.First();
         var option1 = question.Options.First();
@@ -148,10 +148,10 @@ public class ResponseRepositoryTests : IDisposable
         await _repository.AddAsync(response3);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var optionCounts = await _repository.GetOptionCountsAsync(survey.Id);
 
-        // Assert
+        
         optionCounts.Should().HaveCount(2);
         optionCounts[option1.Id].Should().Be(2);
         optionCounts[option2.Id].Should().Be(1);
@@ -160,20 +160,20 @@ public class ResponseRepositoryTests : IDisposable
     [Fact]
     public async Task GetOptionCountsAsync_WhenNoResponses_ShouldReturnEmptyDictionary()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
 
-        // Act
+        
         var optionCounts = await _repository.GetOptionCountsAsync(survey.Id);
 
-        // Assert
+        
         optionCounts.Should().BeEmpty();
     }
 
     [Fact]
     public async Task GetBySurveyIdAsync_ShouldIncludeAnswers()
     {
-        // Arrange
+        
         var survey = await CreateActiveSurveyAsync();
         var question = survey.Questions.First();
         var option = question.Options.First();
@@ -184,10 +184,10 @@ public class ResponseRepositoryTests : IDisposable
         await _repository.AddAsync(response);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var responses = await _repository.GetBySurveyIdAsync(survey.Id);
 
-        // Assert
+        
         responses.Should().HaveCount(1);
         responses.First().Answers.Should().HaveCount(1);
     }

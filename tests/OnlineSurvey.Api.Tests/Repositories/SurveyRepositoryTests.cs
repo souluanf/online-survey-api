@@ -31,15 +31,15 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdAsync_WhenExists_ShouldReturnSurvey()
     {
-        // Arrange
+        
         var survey = new Survey("Test Survey", "Description");
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetByIdAsync(survey.Id);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Id.Should().Be(survey.Id);
         result.Title.Should().Be("Test Survey");
@@ -48,40 +48,40 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdAsync_WhenNotExists_ShouldReturnNull()
     {
-        // Act
+        
         var result = await _repository.GetByIdAsync(Guid.NewGuid());
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetAllAsync_ShouldReturnAllSurveys()
     {
-        // Arrange
+        
         await _repository.AddAsync(new Survey("Survey 1"));
         await _repository.AddAsync(new Survey("Survey 2"));
         await _repository.AddAsync(new Survey("Survey 3"));
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetAllAsync();
 
-        // Assert
+        
         result.Should().HaveCount(3);
     }
 
     [Fact]
     public async Task AddAsync_ShouldAddSurvey()
     {
-        // Arrange
+        
         var survey = new Survey("New Survey");
 
-        // Act
+        
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Assert
+        
         var result = await _context.Surveys.FindAsync(survey.Id);
         result.Should().NotBeNull();
     }
@@ -89,17 +89,17 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task UpdateAsync_ShouldUpdateSurvey()
     {
-        // Arrange
+        
         var survey = new Survey("Original Title");
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         survey.SetTitle("Updated Title");
         await _repository.UpdateAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Assert
+        
         var result = await _context.Surveys.FindAsync(survey.Id);
         result!.Title.Should().Be("Updated Title");
     }
@@ -107,16 +107,16 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task DeleteAsync_ShouldRemoveSurvey()
     {
-        // Arrange
+        
         var survey = new Survey("To Delete");
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         await _repository.DeleteAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Assert
+        
         var result = await _context.Surveys.FindAsync(survey.Id);
         result.Should().BeNull();
     }
@@ -124,7 +124,7 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdWithQuestionsAsync_ShouldIncludeQuestions()
     {
-        // Arrange
+        
         var survey = new Survey("Survey with Questions");
         var question1 = new Question(survey.Id, "Question 1?", 1);
         var question2 = new Question(survey.Id, "Question 2?", 2);
@@ -138,10 +138,10 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetByIdWithQuestionsAsync(survey.Id);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Questions.Should().HaveCount(2);
         result.Questions.First().Order.Should().Be(1);
@@ -150,7 +150,7 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdWithQuestionsAndOptionsAsync_ShouldIncludeQuestionsAndOptions()
     {
-        // Arrange
+        
         var survey = new Survey("Survey with Questions and Options");
         var question = new Question(survey.Id, "Question?", 1);
         question.AddOption(new Option(question.Id, "Option 1", 1));
@@ -160,10 +160,10 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetByIdWithQuestionsAndOptionsAsync(survey.Id);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result!.Questions.Should().HaveCount(1);
         result.Questions.First().Options.Should().HaveCount(2);
@@ -172,7 +172,7 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByStatusAsync_ShouldReturnSurveysWithMatchingStatus()
     {
-        // Arrange
+        
         var draftSurvey = new Survey("Draft Survey");
         var activeSurvey = CreateActiveSurvey("Active Survey");
 
@@ -180,10 +180,10 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(activeSurvey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetByStatusAsync(SurveyStatus.Active);
 
-        // Assert
+        
         result.Should().HaveCount(1);
         result.First().Title.Should().Be("Active Survey");
     }
@@ -191,7 +191,7 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetActiveSurveysAsync_ShouldReturnOnlyActiveSurveys()
     {
-        // Arrange
+        
         var draftSurvey = new Survey("Draft Survey");
         var activeSurvey = CreateActiveSurvey("Active Survey");
 
@@ -199,10 +199,10 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(activeSurvey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().HaveCount(1);
         result.First().Status.Should().Be(SurveyStatus.Active);
     }
@@ -210,17 +210,17 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetPaginatedAsync_ShouldReturnPaginatedResults()
     {
-        // Arrange
+        
         for (int i = 1; i <= 15; i++)
         {
             await _repository.AddAsync(new Survey($"Survey {i}"));
         }
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var (surveys, totalCount) = await _repository.GetPaginatedAsync(page: 1, pageSize: 10);
 
-        // Assert
+        
         surveys.Should().HaveCount(10);
         totalCount.Should().Be(15);
     }
@@ -228,19 +228,19 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetPaginatedAsync_WithStatusFilter_ShouldFilterByStatus()
     {
-        // Arrange
+        
         await _repository.AddAsync(new Survey("Draft 1"));
         await _repository.AddAsync(new Survey("Draft 2"));
         await _repository.AddAsync(CreateActiveSurvey("Active 1"));
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var (surveys, totalCount) = await _repository.GetPaginatedAsync(
             page: 1,
             pageSize: 10,
             status: SurveyStatus.Draft);
 
-        // Assert
+        
         surveys.Should().HaveCount(2);
         totalCount.Should().Be(2);
     }
@@ -248,17 +248,17 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetPaginatedAsync_SecondPage_ShouldSkipFirstPageItems()
     {
-        // Arrange
+        
         for (int i = 1; i <= 15; i++)
         {
             await _repository.AddAsync(new Survey($"Survey {i}"));
         }
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var (surveys, totalCount) = await _repository.GetPaginatedAsync(page: 2, pageSize: 10);
 
-        // Assert
+        
         surveys.Should().HaveCount(5);
         totalCount.Should().Be(15);
     }
@@ -266,27 +266,26 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdWithQuestionsAsync_WhenNotExists_ShouldReturnNull()
     {
-        // Act
+        
         var result = await _repository.GetByIdWithQuestionsAsync(Guid.NewGuid());
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetByIdWithQuestionsAndOptionsAsync_WhenNotExists_ShouldReturnNull()
     {
-        // Act
+        
         var result = await _repository.GetByIdWithQuestionsAndOptionsAsync(Guid.NewGuid());
 
-        // Assert
+        
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetActiveSurveysAsync_ShouldExcludeExpiredSurveys()
     {
-        // Arrange - Create survey with past end date
         var survey = new Survey("Expired Survey");
         var question = new Question(survey.Id, "Test?", 1);
         question.AddOption(new Option(question.Id, "Option 1", 1));
@@ -297,25 +296,25 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(survey);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetActiveSurveysAsync();
 
-        // Assert
+        
         result.Should().BeEmpty();
     }
 
     [Fact]
     public async Task GetByStatusAsync_WithDraftStatus_ShouldReturnOnlyDrafts()
     {
-        // Arrange
+        
         await _repository.AddAsync(new Survey("Draft 1"));
         await _repository.AddAsync(CreateActiveSurvey("Active 1"));
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var result = await _repository.GetByStatusAsync(SurveyStatus.Draft);
 
-        // Assert
+        
         result.Should().HaveCount(1);
         result.First().Status.Should().Be(SurveyStatus.Draft);
     }
@@ -323,10 +322,10 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetPaginatedAsync_WithNoSurveys_ShouldReturnEmpty()
     {
-        // Act
+        
         var (surveys, totalCount) = await _repository.GetPaginatedAsync(page: 1, pageSize: 10);
 
-        // Assert
+        
         surveys.Should().BeEmpty();
         totalCount.Should().Be(0);
     }
@@ -334,7 +333,7 @@ public class SurveyRepositoryTests : IDisposable
     [Fact]
     public async Task GetPaginatedAsync_ShouldOrderByCreatedAtDescending()
     {
-        // Arrange
+        
         var survey1 = new Survey("First Created");
         await _repository.AddAsync(survey1);
         await _context.SaveChangesAsync();
@@ -345,10 +344,10 @@ public class SurveyRepositoryTests : IDisposable
         await _repository.AddAsync(survey2);
         await _context.SaveChangesAsync();
 
-        // Act
+        
         var (surveys, _) = await _repository.GetPaginatedAsync(page: 1, pageSize: 10);
 
-        // Assert
+        
         surveys.First().Title.Should().Be("Second Created");
     }
 
