@@ -248,7 +248,7 @@ function SurveysList() {
                   <LinkButton href={`/surveys/results?id=${survey.id}`} variant="outline" size="sm">
                     <BarChart2 className="w-3 h-3 mr-1" />Resultados
                   </LinkButton>
-                  <LinkButton href={`/surveys/answer?id=${survey.id}`} variant="outline" size="sm">
+                  <LinkButton href={`/surveys/answer?id=${survey.id}&preview=1`} variant="outline" size="sm">
                     <Eye className="w-3 h-3 mr-1" />Pré-visualizar
                   </LinkButton>
                   {survey.status === 'Active' && (

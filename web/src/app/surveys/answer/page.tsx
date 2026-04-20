@@ -26,6 +26,7 @@ export default function SurveyAnswerPage() {
 function SurveyAnswerContent() {
   const searchParams = useSearchParams()
   const id = searchParams.get('id') ?? ''
+  const preview = searchParams.get('preview') === '1'
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -44,6 +45,10 @@ function SurveyAnswerContent() {
     api.surveys.get(id)
       .then((s: SurveyDetailResponse) => {
         setSurvey(s)
+        if (preview) {
+          setAccessState('granted')
+          return
+        }
         if (s.status !== 'Active') {
           setAccessState('inactive')
           return
@@ -58,7 +63,7 @@ function SurveyAnswerContent() {
         }
       })
       .catch(() => setAccessState('denied'))
-  }, [id, user, authLoading, router])
+  }, [id, user, authLoading, router, preview])
 
   const handleRequestCode = async () => {
     setActionError(null)
@@ -130,15 +135,8 @@ function SurveyAnswerContent() {
     <Card className="max-w-md mx-auto mt-12">
       <CardContent className="py-10 text-center space-y-4">
         <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto" />
-        <p className="text-lg font-semibold">Resposta enviada!</p>
-        <div className="flex gap-3 justify-center">
-          <LinkButton href={`/surveys/results?id=${id}`} className="bg-indigo-600 hover:bg-indigo-700">
-            Ver Resultados
-          </LinkButton>
-          <LinkButton href="/surveys" variant="outline">
-            Início
-          </LinkButton>
-        </div>
+        <p className="text-lg font-semibold">Obrigado pela sua resposta!</p>
+        <p className="text-sm text-zinc-500">Sua participação foi registrada com sucesso.</p>
       </CardContent>
     </Card>
   )
@@ -189,6 +187,12 @@ function SurveyAnswerContent() {
         {survey.description && <p className="text-zinc-600 mt-1">{survey.description}</p>}
       </div>
 
+      {preview && (
+        <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+          <AlertDescription>Modo pré-visualização — o envio de respostas está desabilitado.</AlertDescription>
+        </Alert>
+      )}
+
       {actionError && <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>}
 
       {survey.questions.map(q => (
@@ -220,9 +224,9 @@ function SurveyAnswerContent() {
       <Button
         className="bg-indigo-600 hover:bg-indigo-700"
         onClick={handleSubmit}
-        disabled={submitting}
+        disabled={submitting || preview}
       >
-        {submitting ? 'Enviando...' : 'Enviar Respostas'}
+        {preview ? 'Envio desabilitado (preview)' : submitting ? 'Enviando...' : 'Enviar Respostas'}
       </Button>
     </div>
   )
