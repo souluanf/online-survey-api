@@ -59,9 +59,9 @@ else
             </MudCardHeader>
             <MudCardContent>
                 <MudSelect T="SurveyAccessMode" Label="Modo de Acesso" @bind-Value="_accessMode" Variant="Variant.Outlined" Class="mb-4">
-                    <MudSelectItem Value="SurveyAccessMode.Anonymous">Público anônimo</MudSelectItem>
-                    <MudSelectItem Value="SurveyAccessMode.CodeByEmail">Código por email</MudSelectItem>
-                    <MudSelectItem Value="SurveyAccessMode.RequiresLogin">Requer login</MudSelectItem>
+                    <MudSelectItem T="SurveyAccessMode" Value="@SurveyAccessMode.Anonymous">Público anônimo</MudSelectItem>
+                    <MudSelectItem T="SurveyAccessMode" Value="@SurveyAccessMode.CodeByEmail">Código por email</MudSelectItem>
+                    <MudSelectItem T="SurveyAccessMode" Value="@SurveyAccessMode.RequiresLogin">Requer login</MudSelectItem>
                 </MudSelect>
                 <MudCheckBox @bind-Value="_isPublic" Label="Pesquisa pública (visível na listagem)" Color="Color.Primary" Class="mb-4" />
                 <MudText Typo="Typo.subtitle2" Class="mb-2">Dados coletados dos participantes</MudText>
