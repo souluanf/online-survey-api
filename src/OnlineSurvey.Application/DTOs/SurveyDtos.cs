@@ -5,7 +5,10 @@ namespace OnlineSurvey.Application.DTOs;
 public record CreateSurveyRequest(
     string Title,
     string? Description,
-    List<CreateQuestionRequest> Questions
+    List<CreateQuestionRequest> Questions,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
 
 public record CreateQuestionRequest(
@@ -40,7 +43,10 @@ public record SurveyResponse(
     int QuestionCount,
     int ResponseCount,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
 
 public record SurveyDetailResponse(
@@ -52,7 +58,10 @@ public record SurveyDetailResponse(
     DateTime? EndDate,
     List<QuestionResponse> Questions,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
 
 public record QuestionResponse(
@@ -76,3 +85,7 @@ public record PaginatedResponse<T>(
     int TotalCount,
     int TotalPages
 );
+
+public record RequestAccessCodeRequest(string Email);
+public record VerifyAccessCodeRequest(string Email, string Code);
+public record AccessCodeVerificationResponse(bool Success, string? Message = null);

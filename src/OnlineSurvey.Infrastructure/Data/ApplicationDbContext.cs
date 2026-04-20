@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Option> Options => Set<Option>();
     public DbSet<Response> Responses => Set<Response>();
     public DbSet<Answer> Answers => Set<Answer>();
+    public DbSet<SurveyAccessCode> AccessCodes => Set<SurveyAccessCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

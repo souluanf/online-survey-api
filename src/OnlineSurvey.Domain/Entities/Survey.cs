@@ -11,6 +11,9 @@ public class Survey : Entity
     public string OwnerId { get; private set; } = null!;
     public DateTime? StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
+    public SurveyAccessMode AccessMode { get; private set; } = SurveyAccessMode.Anonymous;
+    public SurveyCollectedFields CollectedFields { get; private set; } = SurveyCollectedFields.None;
+    public bool IsPublic { get; private set; } = true;
 
     private readonly List<Question> _questions = [];
     public IReadOnlyCollection<Question> Questions => _questions.AsReadOnly();
@@ -20,12 +23,26 @@ public class Survey : Entity
 
     private Survey() { }
 
-    public Survey(string title, string? description = null, string ownerId = "")
+    public Survey(string title, string? description = null, string ownerId = "",
+        SurveyAccessMode accessMode = SurveyAccessMode.Anonymous,
+        SurveyCollectedFields collectedFields = SurveyCollectedFields.None,
+        bool isPublic = true)
     {
         SetTitle(title);
         Description = description;
         OwnerId = ownerId;
         Status = SurveyStatus.Draft;
+        AccessMode = accessMode;
+        CollectedFields = collectedFields;
+        IsPublic = isPublic;
+    }
+
+    public void Configure(SurveyAccessMode accessMode, SurveyCollectedFields collectedFields, bool isPublic)
+    {
+        AccessMode = accessMode;
+        CollectedFields = collectedFields;
+        IsPublic = isPublic;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetTitle(string title)

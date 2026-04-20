@@ -19,7 +19,7 @@ public class SurveyService : ISurveyService
 
     public async Task<SurveyDetailResponse> CreateSurveyAsync(CreateSurveyRequest request, string ownerId = "", CancellationToken cancellationToken = default)
     {
-        var survey = new Survey(request.Title, request.Description, ownerId);
+        var survey = new Survey(request.Title, request.Description, ownerId, request.AccessMode, request.CollectedFields, request.IsPublic);
 
         foreach (var questionDto in request.Questions.OrderBy(q => q.Order))
         {
@@ -156,7 +156,10 @@ public class SurveyService : ISurveyService
             survey.Questions.Count,
             responseCount,
             survey.CreatedAt,
-            survey.UpdatedAt
+            survey.UpdatedAt,
+            survey.AccessMode,
+            survey.CollectedFields,
+            survey.IsPublic
         );
 
     private static SurveyDetailResponse MapToDetailResponse(Survey survey) =>
@@ -181,6 +184,9 @@ public class SurveyService : ISurveyService
                 ))
                 .ToList(),
             survey.CreatedAt,
-            survey.UpdatedAt
+            survey.UpdatedAt,
+            survey.AccessMode,
+            survey.CollectedFields,
+            survey.IsPublic
         );
 }

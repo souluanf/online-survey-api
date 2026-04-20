@@ -54,6 +54,26 @@ else
         <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
             <MudCardHeader>
                 <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Configurações de Acesso</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudSelect T="SurveyAccessMode" Label="Modo de Acesso" @bind-Value="_accessMode" Variant="Variant.Outlined" Class="mb-4">
+                    <MudSelectItem Value="SurveyAccessMode.Anonymous">Público anônimo</MudSelectItem>
+                    <MudSelectItem Value="SurveyAccessMode.CodeByEmail">Código por email</MudSelectItem>
+                    <MudSelectItem Value="SurveyAccessMode.RequiresLogin">Requer login</MudSelectItem>
+                </MudSelect>
+                <MudCheckBox @bind-Value="_isPublic" Label="Pesquisa pública (visível na listagem)" Color="Color.Primary" Class="mb-4" />
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Dados coletados dos participantes</MudText>
+                <MudCheckBox @bind-Value="_collectName" Label="Nome" Color="Color.Primary" />
+                <MudCheckBox @bind-Value="_collectEmail" Label="Email" Color="Color.Primary" />
+                <MudCheckBox @bind-Value="_collectAge" Label="Idade" Color="Color.Primary" />
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Elevation="2" Style="border-radius:12px" Class="mb-5">
+            <MudCardHeader>
+                <CardHeaderContent>
                     <MudText Typo="Typo.h6">Perguntas</MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -178,6 +198,16 @@ else
     private bool _created;
     private string? _errorMessage;
     private Guid _createdSurveyId;
+    private SurveyAccessMode _accessMode = SurveyAccessMode.Anonymous;
+    private bool _isPublic = true;
+    private bool _collectName;
+    private bool _collectEmail;
+    private bool _collectAge;
+
+    private SurveyCollectedFields CollectedFields =>
+        (_collectName ? SurveyCollectedFields.Name : SurveyCollectedFields.None) |
+        (_collectEmail ? SurveyCollectedFields.Email : SurveyCollectedFields.None) |
+        (_collectAge ? SurveyCollectedFields.Age : SurveyCollectedFields.None);
 
     protected override void OnInitialized()
     {
@@ -244,7 +274,10 @@ else
                     qi + 1,
                     q.IsRequired,
                     q.Options.Select((o, oi) => new CreateOptionRequest(o.Text, oi + 1)).ToList()
-                )).ToList()
+                )).ToList(),
+                _accessMode,
+                CollectedFields,
+                _isPublic
             );
 
             var result = await SurveyService.CreateSurveyAsync(request);

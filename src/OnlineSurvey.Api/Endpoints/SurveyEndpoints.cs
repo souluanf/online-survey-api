@@ -5,6 +5,7 @@ using OnlineSurvey.Application.DTOs;
 using OnlineSurvey.Application.Interfaces;
 using OnlineSurvey.Domain.Enums;
 
+
 namespace OnlineSurvey.Api.Endpoints;
 
 public static class SurveyEndpoints
@@ -67,6 +68,17 @@ public static class SurveyEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .RequireAuthorization();
+
+        group.MapPost("/{id:guid}/access/request", RequestAccessCode)
+            .WithName("RequestAccessCode")
+            .WithDescription("Requests an access code for a survey by email")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/access/verify", VerifyAccessCode)
+            .WithName("VerifyAccessCode")
+            .WithDescription("Verifies an access code for a survey")
+            .Produces<AccessCodeVerificationResponse>();
     }
 
     private static async Task<IResult> CreateSurvey(
@@ -154,5 +166,25 @@ public static class SurveyEndpoints
     {
         await surveyService.DeleteSurveyAsync(id, cancellationToken);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> RequestAccessCode(
+        Guid id,
+        [FromBody] RequestAccessCodeRequest request,
+        IAccessCodeService accessCodeService,
+        CancellationToken cancellationToken)
+    {
+        var success = await accessCodeService.RequestCodeAsync(id, request.Email, cancellationToken);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+
+    private static async Task<IResult> VerifyAccessCode(
+        Guid id,
+        [FromBody] VerifyAccessCodeRequest request,
+        IAccessCodeService accessCodeService,
+        CancellationToken cancellationToken)
+    {
+        var success = await accessCodeService.VerifyCodeAsync(id, request.Email, request.Code, cancellationToken);
+        return Results.Ok(new AccessCodeVerificationResponse(success, success ? null : "Código inválido ou expirado."));
     }
 }

@@ -15,6 +15,8 @@ public static class DependencyInjection
         services.AddScoped<ResponseService>();
         services.AddScoped<IResponseService, CachedResponseService>();
 
+        services.AddScoped<IAccessCodeService, AccessCodeService>();
+
         services.AddValidatorsFromAssemblyContaining<ISurveyService>();
 
         return services;

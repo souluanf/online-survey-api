@@ -107,4 +107,18 @@ public class SurveyApiService : ISurveyApiService
         }
         return null;
     }
+
+    public async Task<bool> RequestAccessCodeAsync(Guid surveyId, string email)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/surveys/{surveyId}/access/request", new RequestAccessCodeRequest(email));
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> VerifyAccessCodeAsync(Guid surveyId, string email, string code)
+    {
+        var response = await _httpClient.PostAsJsonAsync($"api/surveys/{surveyId}/access/verify", new VerifyAccessCodeRequest(email, code));
+        if (!response.IsSuccessStatusCode) return false;
+        var result = await response.Content.ReadFromJsonAsync<AccessCodeVerificationResponse>();
+        return result?.Success ?? false;
+    }
 }

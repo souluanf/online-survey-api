@@ -14,4 +14,6 @@ public interface ISurveyApiService
     Task<bool> DeleteSurveyAsync(Guid surveyId);
     Task<SurveyDetailResponse?> UpdateSurveyAsync(Guid surveyId, UpdateSurveyRequest request);
     Task<SurveyDetailResponse?> CloseSurveyAsync(Guid surveyId);
+    Task<bool> RequestAccessCodeAsync(Guid surveyId, string email);
+    Task<bool> VerifyAccessCodeAsync(Guid surveyId, string email, string code);
 }

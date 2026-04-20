@@ -35,6 +35,10 @@ public class SurveyConfiguration : IEntityTypeConfiguration<Survey>
             .HasForeignKey(r => r.SurveyId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(s => s.AccessMode).IsRequired();
+        builder.Property(s => s.CollectedFields).IsRequired();
+        builder.Property(s => s.IsPublic).IsRequired();
+
         builder.HasIndex(s => s.Status);
         builder.HasIndex(s => s.CreatedAt);
     }

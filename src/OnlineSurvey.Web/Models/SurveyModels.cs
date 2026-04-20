@@ -10,7 +10,10 @@ public record SurveyResponse(
     int QuestionCount,
     int ResponseCount,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
 
 public record SurveyDetailResponse(
@@ -22,7 +25,10 @@ public record SurveyDetailResponse(
     DateTime? EndDate,
     List<QuestionResponse> Questions,
     DateTime CreatedAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
 
 public record QuestionResponse(
@@ -85,12 +91,35 @@ public enum SurveyStatus
     Closed = 2
 }
 
+public enum SurveyAccessMode
+{
+    Anonymous = 0,
+    CodeByEmail = 1,
+    RequiresLogin = 2
+}
+
+[Flags]
+public enum SurveyCollectedFields
+{
+    None  = 0,
+    Name  = 1,
+    Email = 2,
+    Age   = 4
+}
+
 // Request models for creating surveys
 public record CreateSurveyRequest(
     string Title,
     string? Description,
-    List<CreateQuestionRequest> Questions
+    List<CreateQuestionRequest> Questions,
+    SurveyAccessMode AccessMode = SurveyAccessMode.Anonymous,
+    SurveyCollectedFields CollectedFields = SurveyCollectedFields.None,
+    bool IsPublic = true
 );
+
+public record RequestAccessCodeRequest(string Email);
+public record VerifyAccessCodeRequest(string Email, string Code);
+public record AccessCodeVerificationResponse(bool Success, string? Message = null);
 
 public record CreateQuestionRequest(
     string Text,
