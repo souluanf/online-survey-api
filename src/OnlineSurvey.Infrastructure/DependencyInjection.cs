@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnlineSurvey.Application.Interfaces;
@@ -26,7 +27,8 @@ public static class DependencyInjection
                 {
                     npgsqlOptions.EnableRetryOnFailure(3);
                     npgsqlOptions.CommandTimeout(30);
-                }));
+                })
+                .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
         }
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
