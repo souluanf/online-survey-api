@@ -28,31 +28,31 @@ jobs:
     name: Build, Test & SonarCloud Quality Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.x'
           dotnet-quality: 'preview'
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -102,60 +102,32 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push API image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
           context: .
           file: Dockerfile
           push: true
           tags: ${{ env.IMAGE_API }}:latest,${{ env.IMAGE_API }}:${{ github.sha }}
 
-      - name: Install Doppler CLI
-        run: |
-          curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
-          sudo apt-get update && sudo apt-get install -y doppler
-
-      - name: Inject Doppler secrets into manifests
+      - name: Substitute IMAGE_TAG in deployment
         env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          export APP_HOST=$(doppler secrets get APP_HOST --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          envsubst '${APP_HOST}' < k8s/ingress.yaml > k8s/ingress.yaml.tmp && mv k8s/ingress.yaml.tmp k8s/ingress.yaml
-          envsubst '${IMAGE_TAG}' < k8s/deployment.yaml > k8s/deployment.yaml.tmp && mv k8s/deployment.yaml.tmp k8s/deployment.yaml
-
-      - name: Generate postgres secret manifest
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-        run: |
-          POSTGRES_DB=$(doppler secrets get POSTGRES_DB --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          POSTGRES_USER=$(doppler secrets get POSTGRES_USER --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          POSTGRES_PASSWORD=$(doppler secrets get POSTGRES_PASSWORD --plain --token $DOPPLER_TOKEN --project online-survey-api --config prd)
-          cat > k8s/postgres-secret.yaml <<EOF
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: survey-postgres-secret
-            namespace: survey
-          type: Opaque
-          stringData:
-            POSTGRES_DB: "${POSTGRES_DB}"
-            POSTGRES_USER: "${POSTGRES_USER}"
-            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-          EOF
+          envsubst '${IMAGE_TAG}' < k8s/deployment.yaml > k8s/deployment.yaml.tmp
+          mv k8s/deployment.yaml.tmp k8s/deployment.yaml
 
       - name: Copy manifests to server
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@917f8b81dfc1ccd331fef9e2d61bdc6c8be94634 # v0.1.7
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
@@ -164,14 +136,22 @@ jobs:
           target: "/tmp/survey"
 
       - name: Deploy to k3s
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER
           script: |
+            export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
             kubectl apply -f /tmp/survey/k8s/namespace.yaml
-            kubectl apply -f /tmp/survey/k8s/postgres-secret.yaml
-            kubectl apply -f /tmp/survey/k8s/postgres.yaml
+            kubectl create secret docker-registry ghcr-secret \
+              --docker-server=ghcr.io \
+              --docker-username=$GHCR_USER \
+              --docker-password=$GHCR_TOKEN \
+              -n survey --dry-run=client -o yaml | kubectl apply -f -
             kubectl apply -f /tmp/survey/k8s/
-            kubectl rollout restart deployment/survey-api -n survey
+            kubectl rollout status deployment/survey-api -n survey --timeout=180s
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
